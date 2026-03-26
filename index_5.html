@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DRIVE KANTO — 関東ドライブルートガイド</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#b5312c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DriveKanto">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-tap-highlight-color:transparent;scroll-behavior:smooth}
+body{font-family:'Noto Sans JP',sans-serif;background:#f4f3f0;color:#1a1a1a;line-height:1.6;min-height:100dvh}
+:root{--accent:#b5312c;--accent-bg:rgba(181,49,44,0.06);--bg:#f4f3f0;--surface:#fff;--border:#ddd9d3;--text:#1a1a1a;--text-sub:#555;--text-hint:#767676;--r:6px;--shadow:0 1px 3px rgba(0,0,0,0.06);--safe-bottom:env(safe-area-inset-bottom,0px)}
+
+/* ── HEADER ── */
+header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.header-inner{max-width:1200px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Outfit',sans-serif;font-weight:700;font-size:17px;color:var(--text);text-decoration:none;letter-spacing:-0.3px}
+.logo span{color:var(--accent)}
+.h-badge{font-size:10px;font-weight:500;color:var(--text-hint);border:1px solid var(--border);border-radius:4px;padding:2px 8px}
+
+/* ── PAGE WRAPPER ── */
+.page{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* ── CATEGORY STRIP (sticky horizontal bar) ── */
+.cat-strip{position:sticky;top:52px;z-index:90;background:rgba(244,243,240,0.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.cat-strip-inner{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-top:10px;padding-bottom:10px}
+.cat-strip-inner::-webkit-scrollbar{display:none}
+.cat-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);transition:all 0.15s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.cat-chip:active{transform:scale(0.95)}
+.cat-chip .chip-icon{font-size:15px;line-height:1}
+.cat-chip .chip-name{font-size:12px;font-weight:700;color:var(--text-sub)}
+.cat-chip .chip-count{font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;color:var(--text-hint)}
+.cat-chip.active .chip-name{color:#fff}
+.cat-chip.active .chip-count{color:rgba(255,255,255,0.7)}
+
+/* ── MOOD BANNER ── */
+.mood-banner{display:none;padding:28px 24px 24px;position:relative;overflow:hidden;transition:opacity 0.3s}
+.mood-banner.show{display:block}
+.mood-banner-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.mood-banner-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:10px}
+.mood-banner-left{display:flex;align-items:center;gap:14px}
+.mood-banner-icon{font-size:36px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3))}
+.mood-banner-name{font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:#fff;letter-spacing:-0.5px;text-shadow:0 1px 6px rgba(0,0,0,0.4)}
+.mood-banner-count{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-top:2px}
+.mood-banner-back{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:6px 14px;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;backdrop-filter:blur(4px);-webkit-tap-highlight-color:transparent;transition:background 0.15s;flex-shrink:0;min-height:36px}
+.mood-banner-back:hover{background:rgba(255,255,255,0.28)}
+.mood-banner-tip{background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);border-radius:8px;padding:9px 12px;font-size:12px;color:rgba(255,255,255,0.88);line-height:1.65;border-left:2px solid rgba(255,255,255,0.4)}
+.mood-banner-tip-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:3px;letter-spacing:.05em}
+.mood-banner::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.18);pointer-events:none}
+
+/* ── ROUTE SECTION ── (tip は mood-banner に統合したので不要) ── */
+.tip{display:none}
+
+/* ── BEST TIME BADGE on card ── */
+.rc-best-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#b26a00;background:#fff8e1;border:1px solid #ffe082;border-radius:4px;padding:2px 6px;margin-top:3px;white-space:nowrap}
+.rc-best-badge::before{content:'⏰';font-size:9px}
+
+/* ── CAR TYPE BADGE ── */
+.rc-carbadge{display:inline-flex;align-items:center;font-size:9px;font-weight:700;background:#1a1a1a;color:#fff;border-radius:4px;padding:2px 6px;white-space:nowrap}
+.rc-car-wrap{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+
+/* ── HAZARD CHIPS ── */
+.mo-hazards{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.hazard-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;background:#fff8e1;color:#b26a00;border:1px solid #ffcc02;border-radius:6px;padding:4px 9px}
+.hazard-chip::before{content:'⚠';font-size:11px}
+
+/* ── SEASON STATUS BADGE ── */
+.rc-season-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block}
+.rc-season-badge.closed{background:#ffeaea;color:#c62828}
+.rc-season-badge.check{background:#fff8e1;color:#b26a00}
+
+/* ── TODAY'S RECOMMENDATION ── */
+.today-rec{padding-bottom:32px}
+.today-rec-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.today-rec-title{font-size:14px;font-weight:700}
+.today-rec-sub{font-size:11px;color:var(--text-hint)}
+.today-rec-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.today-rec-random{margin-top:12px;width:100%;padding:12px;background:none;border:1.5px dashed var(--border);border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;color:var(--text-hint);cursor:pointer;transition:all .15s}
+.today-rec-random:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+
+/* ── SORT BAR ── */
+.sort-bar{display:flex;gap:6px;align-items:center;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.sort-bar::-webkit-scrollbar{display:none}
+.sort-btn{background:none;border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-family:'Noto Sans JP',sans-serif;font-size:11px;font-weight:600;color:var(--text-hint);cursor:pointer;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.sort-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.sort-btn.season-on{background:#2e7d32;color:#fff;border-color:#2e7d32}
+
+/* ── NEW TAGS ── */
+.rc-label.jdm{background:#1a1a1a;color:#f0c040}
+.rc-label.touge{background:#1a1a1a;color:#e0e0e0}
+.rc-label.timeattack{background:#c62828;color:#fff}
+.rc-label.nightmeet{background:#1a237e;color:#c5cae9}
+
+/* ── ROUTE SECTION ── */
+.routes{padding-bottom:60px;display:none}.routes.show{display:block}
+.routes-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.routes-title{font-size:14px;font-weight:700}
+.routes-back{background:none;border:none;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:600;color:var(--text-hint);cursor:pointer;padding:8px 4px;min-height:44px;display:flex;align-items:center;gap:3px}
+.routes-back svg{width:13px;height:13px}
+
+/* ── ROUTE CARD LIST ── */
+#list{display:grid;grid-template-columns:1fr;gap:10px}
+
+/* ── ROUTE CARD ── */
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;overflow:hidden;transition:box-shadow 0.18s,transform 0.14s;position:relative}
+.rc:hover{box-shadow:0 6px 20px rgba(0,0,0,0.11);transform:translateY(-2px)}
+.rc:active{transform:scale(0.98);box-shadow:var(--shadow)}
+
+/* カテゴリカラーの帯 */
+.rc-cat-bar{position:absolute;top:0;left:0;right:0;height:3px;z-index:1}
+
+/* ── MAP THUMBNAIL ── */
+.rc-map{width:100%;height:136px;display:block;position:relative;overflow:hidden;background:#e8e6e2}
+.rc-map svg{width:100%;height:100%;display:block}
+.rc-map img{width:100%;height:100%;object-fit:cover;display:block}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.rc-map-skeleton{position:absolute;inset:0;background:linear-gradient(90deg,var(--sk-c1,#e8e6e2) 25%,var(--sk-c2,#f4f3f0) 50%,var(--sk-c1,#e8e6e2) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite linear}
+@keyframes mapfadein{from{opacity:0}to{opacity:1}}
+.rc-map-labels{position:absolute;bottom:7px;left:8px;right:8px;display:flex;justify-content:space-between;gap:4px;pointer-events:none}
+.rc-map-labels span{font-family:'Outfit',sans-serif;font-size:9px;font-weight:600;color:#222;background:rgba(255,255,255,0.92);padding:2px 7px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+
+/* ── CARD BODY ── */
+.rc-body{padding:10px 12px 11px;min-width:0}
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px}
+.rc-name{font-size:13px;font-weight:700;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1}
+.rc-area{font-size:10px;color:var(--text-hint);white-space:nowrap;flex-shrink:0;margin-top:2px}
+.rc-meta{display:flex;gap:0;margin-bottom:5px;border-top:1px solid #f2f0ec;padding-top:6px;margin-top:2px}
+.rc-tag{font-size:10px;color:var(--text-hint);padding-right:8px;white-space:nowrap}
+.rc-tag+.rc-tag{border-left:1px solid #e8e5e0;padding-left:8px}
+.rc-tag.diff{color:var(--accent);font-weight:700}
+.rc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.rc-label{font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.rc-label.beginner{background:#e8f5e9;color:#2e7d32}
+.rc-label.date{background:#fce4ec;color:#c62828}
+.rc-label.initiald{background:#fff3e0;color:#e65100}
+.rc-label.onsen{background:#e3f2fd;color:#1565c0}
+.rc-label.gourmet{background:#fff8e1;color:#b26a00}
+.rc-label.scenic{background:#e0f2f1;color:#00695c}
+.rc-label.autumn{background:#fbe9e7;color:#bf360c}
+.rc-label.nightrec{background:#ede7f6;color:#4527a0}
+.rc-label.short{background:#f3e5f5;color:#6a1b9a}
+.rc-label.long{background:#e8eaf6;color:#283593}
+.rc-spot-badge{font-size:9px;color:var(--text-hint);margin-top:4px;display:flex;align-items:center;gap:3px}
+.rc-spot-badge::before{content:'';display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;opacity:.55}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mo.show{display:flex}
+.mo-sheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:600px;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;padding:0 20px calc(24px + var(--safe-bottom));transform:translateY(100%);transition:transform 0.38s cubic-bezier(0.32,0.72,0,1)}
+.mo.show .mo-sheet{transform:translateY(0)}
+.mo-handle{width:36px;height:4px;background:#e0ddd8;border-radius:2px;margin:12px auto 16px}
+.mo-close-btn{display:none}
+.mo-title{font-size:18px;font-weight:700;line-height:1.35;margin-bottom:3px}
+.mo-area{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.mo-svg-wrap{border-radius:8px;margin-bottom:14px;overflow:hidden}
+.mo-svg-wrap svg{width:100%;height:85px;display:block}
+.mo-svg-labels{display:flex;justify-content:space-between;margin-top:4px;font-family:'Outfit',sans-serif;font-size:9px;color:rgba(0,0,0,0.3);font-weight:500}
+.mo-desc{font-size:13px;line-height:1.85;color:var(--text-sub);margin-bottom:14px}
+
+/* Info table */
+.info-tbl{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12.5px}
+.info-tbl tr{border-bottom:1px solid #f0eeeb}
+.info-tbl tr:last-child{border-bottom:none}
+.info-tbl th{text-align:left;font-weight:500;color:var(--text-hint);padding:7px 0;width:78px;vertical-align:top}
+.info-tbl td{padding:7px 0;font-weight:600;color:var(--text);font-size:13px}
+
+/* Tip box */
+.mo-tip{background:linear-gradient(135deg,#fdf9f5,#faf6f0);border:1px solid #ece7e0;border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.mo-tip-h{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px;letter-spacing:.02em}
+.mo-tip-b{font-size:12.5px;color:var(--text-sub);line-height:1.75}
+
+/* Tabs */
+.mo-tabs{display:flex;border-bottom:1.5px solid var(--border);margin:0 -20px 18px;padding:0 20px;gap:0;position:sticky;top:0;background:#fff;z-index:2}
+.mo-tab{flex:1;padding:11px 0;font-size:13px;font-weight:700;color:var(--text-hint);border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent;transition:color 0.15s}
+.mo-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.mo-tab-panel{display:none}.mo-tab-panel.active{display:block}
+
+/* Spots */
+.mo-spots{margin-bottom:16px}
+.mo-spots-h{font-size:10px;font-weight:700;color:var(--text-hint);margin-bottom:8px;letter-spacing:.08em;text-transform:uppercase}
+.spots-list{display:flex;flex-wrap:wrap;gap:6px}
+.spot-chip{display:inline-flex;align-items:center;gap:5px;background:#f7f5f2;border:1px solid #e8e4de;border-radius:20px;padding:6px 12px;font-size:12px;color:var(--text);text-decoration:none;cursor:pointer;transition:background 0.12s,border-color 0.12s;-webkit-tap-highlight-color:transparent}
+.spot-chip:active{background:#edeae4;border-color:#ccc7be}
+.spot-chip .stype{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+.stype.hana{background:#fce4ec;color:#c62828}.stype.koyo{background:#fbe9e7;color:#bf360c}
+.stype.onsen{background:#e3f2fd;color:#1565c0}.stype.view{background:#ede7f6;color:#4527a0}
+.stype.gourmet{background:#fff8e1;color:#b26a00}.stype.rekishi{background:#f3e5f5;color:#6a1b9a}
+.spot-season{font-size:9px;color:var(--text-hint);white-space:nowrap}
+.spots-hidden{display:none}
+.spots-toggle{font-size:11px;color:var(--text-hint);background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;margin-top:2px}
+.spots-toggle:active{background:#f0eeeb}
+
+/* Route plan */
+.mo-route-plan{margin-bottom:16px;background:#faf9f7;border-radius:8px;padding:2px 12px}
+.route-stops{display:flex;flex-direction:column;gap:0;font-size:12px}
+.route-stop{display:flex;align-items:center;gap:10px;padding:7px 0}
+.route-stop-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.route-stop-dot.start{background:#34A853}
+.route-stop-dot.via{background:none;border:2px solid var(--accent);width:8px;height:8px}
+.route-stop-dot.end{background:#EA4335;position:relative}
+.route-stop-dot.end::after{content:'';position:absolute;inset:-3px;border:2px solid #EA4335;border-radius:50%}
+.route-stop-line{width:10px;display:flex;justify-content:center;flex-shrink:0}
+.route-stop-line::before{content:'';display:block;width:1.5px;height:16px;background:#c8c3bc}
+.route-stop-name{color:var(--text-sub);font-weight:500;font-size:12.5px}
+.route-stop-name b{color:var(--text);font-weight:700}
+
+/* CTA */
+.cta-group{display:flex;flex-direction:column;gap:10px}
+.cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;transition:opacity 0.15s,transform 0.12s}
+.cta:hover{opacity:0.88}
+.cta:active{opacity:0.78;transform:scale(0.99)}
+.cta svg{width:18px;height:18px}
+.cta-primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(181,49,44,0.3)}
+.cta-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+
+/* ════════════════════════════════════════
+   TABLET  (≥ 600px)
+   ════════════════════════════════════════ */
+@media(min-width:600px){
+  #list{grid-template-columns:1fr 1fr;gap:12px}
+  .rc-map{height:148px}
+  .today-rec-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ════════════════════════════════════════
+   PC LAYOUT  (≥ 860px)
+   ════════════════════════════════════════ */
+@media(min-width:860px){
+  .header-inner{padding:12px 32px}
+  .logo{font-size:19px}
+  .page{padding:0 32px;padding-top:28px;padding-bottom:60px}
+  .cat-strip-inner{padding-left:32px;padding-right:32px}
+  .cat-chip{padding:8px 16px}
+  .cat-chip .chip-icon{font-size:16px}
+  .cat-chip .chip-name{font-size:13px}
+  .mood-banner{padding:32px 32px 28px}
+
+  /* ルートカード：3列グリッド */
+  #list{grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .rc-map{height:144px}
+  .rc-name{font-size:13.5px}
+  .today-rec-grid{grid-template-columns:1fr 1fr 1fr}
+
+  /* ルートヘッダー */
+  .routes{padding-bottom:0}
+  .routes-head{margin-bottom:14px}
+  .routes-title{font-size:15px}
+
+  /* モーダル：中央ダイアログに変更 */
+  .mo{align-items:center;padding:24px}
+  .mo-sheet{border-radius:14px;max-width:680px;max-height:88vh;transform:scale(0.94) translateY(10px);transition:transform 0.28s cubic-bezier(0.32,0.72,0,1),opacity 0.28s;opacity:0;padding:0 28px 32px}
+  .mo.show .mo-sheet{transform:scale(1) translateY(0);opacity:1}
+  .mo-handle{display:none}
+  .mo-close-btn{display:flex;align-items:center;justify-content:flex-end;padding:18px 0 4px;cursor:pointer;background:none;border:none;color:var(--text-hint);font-size:12px;font-family:'Noto Sans JP',sans-serif;gap:4px;margin-left:auto}
+  .mo-close-btn svg{width:14px;height:14px}
+  .mo-title{font-size:21px}
+  .mo-tabs{margin:0 -28px 18px;padding:0 28px}
+  .cta-group{flex-direction:row}
+  .cta{font-size:14px;padding:13px 18px}
+  .info-tbl{font-size:13px}
+  .mo-desc{font-size:13.5px;line-height:1.9}
+/* ── MAP VIEW ── */
+.map-view{display:none;position:fixed;inset:0;top:52px;z-index:50;background:#f4f3f0;flex-direction:column}
+.map-view.show{display:flex}
+#mapLeaflet{flex:1;width:100%;min-height:200px}
+
+.map-header{padding:11px 16px;background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.map-loc-btn{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(181,49,44,0.25)}
+.map-loc-btn:active{opacity:.8}
+.map-loc-info{font-size:11px;color:var(--text-hint);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.map-list{flex-shrink:0;max-height:42vh;overflow-y:auto;overscroll-behavior:contain;background:var(--surface)}
+.map-list-header{padding:8px 16px 4px;font-size:10px;font-weight:700;color:var(--text-hint);letter-spacing:.06em;border-bottom:1px solid var(--border);background:#faf9f7;position:sticky;top:0;z-index:1}
+.map-route-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:0.5px solid #f0eeeb;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
+.map-route-row:active{background:#f7f4f0}
+.map-route-row.highlighted{background:#fdf5f4;border-left:3px solid var(--accent)}
+.map-cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+.map-route-info{flex:1;min-width:0}
+.map-route-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;margin-bottom:1px}
+.map-route-sub{font-size:10px;color:var(--text-hint);white-space:nowrap}
+.map-dist-badge{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;background:#fdf2f2;padding:3px 8px;border-radius:6px}
+.map-dist-badge.far{color:var(--text-hint);background:#f5f4f2}
+.map-dist-no{font-size:10px;color:#ccc;white-space:nowrap;flex-shrink:0}
+
+.nav-map-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.nav-map-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+@media(min-width:860px){
+  .map-view{top:54px;flex-direction:row}
+  #mapLeaflet{flex:1;min-height:unset}
+  .map-side{width:340px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface)}
+  .map-list{flex:1;max-height:none}
+}
+</style>
+</head>
+<body>
+<header><div class="header-inner"><a href="#" class="logo" onclick="goHome(event)">DRIVE<span>KANTO</span></a><button class="nav-map-btn" id="mapBtn" onclick="toggleMapView()">🗺 地図</button></div></header>
+<div class="cat-strip"><div class="cat-strip-inner" id="catGrid"></div></div>
+<div class="mood-banner" id="moodBanner"></div>
+<div id="mapView" class="map-view">
+  <div id="mapSide" class="map-side" style="display:none">
+    <div class="map-header">
+      <button class="map-loc-btn" onclick="locateMe()">📍 現在地</button>
+      <span class="map-loc-info" id="mapLocInfo">現在地を取得して距離順に並び替え</span>
+    </div>
+    <div class="map-list" id="mapList"></div>
+  </div>
+  <div id="mapLeaflet"></div>
+  <div id="mapSideMobile" style="display:flex;flex-direction:column;flex-shrink:0">
+    <div class="map-header">
+      <button class="map-loc-btn" onclick="locateMe()">📍 現在地を取得</button>
+      <span class="map-loc-info" id="mapLocInfoM">距離順に並び替えができます</span>
+    </div>
+    <div class="map-list" id="mapListM"></div>
+  </div>
+</div>
+<div class="page">
+    <div id="empty">
+      <div class="today-rec" id="todayRec"></div>
+    </div>
+    <section class="routes" id="routes">
+        <div class="routes-head">
+          <div class="routes-title">
+            <span class="routes-title-text" id="routesTitle"></span>
+            <span class="routes-count" id="routesCount"></span>
+          </div>
+          <button class="routes-back" onclick="goHome(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>カテゴリ一覧</button>
+        </div>
+        <div id="list"></div>
+      </section>
+</div>
+<div class="mo" id="mo" onclick="closeMo()"><div class="mo-sheet" onclick="event.stopPropagation()"><div class="mo-handle"></div><button class="mo-close-btn" onclick="closeMo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>閉じる</button><div id="moBody"></div></div></div>
+<script src="route_svgs.js"></script>
+<script>
+const CATS=[{id:'sea',icon:'🌊',name:'海辺ドライブ',count:7,tip:'房総フラワーラインは冬〜春が穴場。湘南の夏週末は渋滞必至なので早朝5時スタートが鉄板。'},{id:'winding',icon:'⚡',name:'ワインディング',count:10,tip:'ターンパイクが入門に最適。道幅広め・路面良好・景色抜群の三拍子。いきなり碓氷峠はカーブ184個で心が折れます。'},{id:'shutoko',icon:'🏙',name:'首都高クルーズ',count:4,tip:'同一料金制を活用すれば300円で100km以上走れる。深夜0時以降がベスト。大黒PAは一見の価値あり。'},{id:'circuit',icon:'🏁',name:'サーキット',count:6,tip:'初サーキットはTC1000一択。速度域が低いから安心で、ブレーキングの基本が身につきます。'},{id:'night',icon:'🌙',name:'夜景ドライブ',count:5,tip:'K6川崎線の工場夜景はSF映画の世界。デートなら湘南平→みなとみらいのハシゴが黄金ルート。'},{id:'mountain',icon:'⛰',name:'山岳・高原',count:12,tip:'ビーナスラインは76km全線無料でアルプスの絶景。つまごいパノラマラインは北海道感。富士山スカイラインは五合目まで直登。関東近辺は山岳ルートの宝庫です。'},{id:'michinoeki',icon:'🍙',name:'道の駅巡り',count:5,tip:'川場田園プラザは全国1位の道の駅。ここだけで半日潰せる。道の駅巡りは走行距離じゃなく食べた量が勝敗を分ける。'},{id:'onsen',icon:'♨️',name:'日帰り温泉',count:6,tip:'草津＋四万の群馬ダブル温泉は1日で行ける最強コンボ。那須は距離の割に温泉の密度が高く、コスパ最強。鹿の湯の硫黄臭は洗っても翌日まで残るので覚悟して。'},{id:'flower',icon:'🌸',name:'花・絶景めぐり',count:6,tip:'権現堂の桜×菜の花は3月下旬の平日早朝一択。ネモフィラは4月中旬が見頃で開園30分前から並ぶのが正解。足利フラワーパークの大藤ライトアップはデート最強スポット。'}];
+const TAGS={beginner:{label:'初心者OK',cls:'beginner'},date:{label:'デート向き',cls:'date'},initiald:{label:'頭文字D',cls:'initiald'},onsen:{label:'温泉つき',cls:'onsen'},gourmet:{label:'グルメ',cls:'gourmet'},scenic:{label:'絶景',cls:'scenic'},autumn:{label:'紅葉',cls:'autumn'},nightrec:{label:'夜がベスト',cls:'nightrec'},short:{label:'短距離',cls:'short'},long:{label:'ロング',cls:'long'},jdm:{label:'JDM聖地',cls:'jdm'},touge:{label:'峠走り',cls:'touge'},timeattack:{label:'タイムアタック',cls:'timeattack'},nightmeet:{label:'夜の集まり',cls:'nightmeet'}};
+const R={sea:[
+{id:'sea_01',name:'湘南〜江ノ島',area:'神奈川',dist:'20km',time:'約40分',diff:'★',fee:'無料',season:'通年',parking:'江ノ島周辺に複数あり（有料500〜800円）。江の島岩屋Pが便利',best:'平日早朝〜9時 or 日曜16時以降。夏の土日昼は渋滞2〜3時間',car:'FF含む全車OK。道幅広く初心者向き',desc:'国道134号で相模湾沿いを走る王道ルート。七里ヶ浜からの富士山ビューが格別。',tip:'平日早朝か日曜16時以降が狙い目。七里ヶ浜のPCHはパンケーキが美味い。',tags:['beginner','date'],lat:35.3255,lng:139.4040},
+{id:'sea_02',name:'三浦半島一周',area:'神奈川',dist:'60km',time:'約2時間',diff:'★★',fee:'無料',season:'春〜秋',parking:'城ヶ島P（無料・200台）。三崎港周辺は有料300〜500円',best:'平日終日OK。GW・夏の土日は城ヶ島橋付近で渋滞',car:'FF含む全車OK。狭路あるがゆっくり走れば問題なし',desc:'東京湾側と相模湾側で景色が変わる半島一周。城ヶ島の断崖、三崎マグロ、葉山の海辺。',tip:'三崎港「くろば亭」のまぐろは絶品。城ヶ島大橋は停車して見て。',tags:['gourmet','scenic'],spots:[{name:'三崎港 くろば亭 まぐろ',type:'gourmet',season:'通年'},{name:'城ヶ島公園',type:'view',season:'通年'},{name:'灯明堂海岸（観音崎）',type:'view',season:'通年'}],lat:35.2680,lng:139.6650},
+{id:'sea_03',name:'房総フラワーライン',area:'千葉',dist:'46km',time:'約1時間',diff:'★',fee:'無料',season:'1〜4月',parking:'道の駅ちくら潮風王国（無料・100台）。各花畑にも臨時P多数',best:'平日の午前中が穴場。週末は10〜14時に花畑周辺で渋滞',car:'FF含む全車OK。道幅広く走りやすい',desc:'館山〜南房総の海岸道路。春は菜の花やポピーが咲き花と海を同時に楽しめる。千倉・白浜エリアでは冬〜春に花畑が連続し、海との対比が絵になる。',tip:'道の駅「保田小学校」の給食風ランチが楽しい。千倉の花畑は1月から走れる。冬が穴場シーズン。',tags:['beginner','scenic'],spots:[{name:'千倉・白浜の花畑',type:'hana',season:'1〜3月'},{name:'道の駅 ちくら潮風王国',type:'gourmet',season:'通年'}],lat:34.9580,lng:139.7550},
+{id:'sea_04',name:'九十九里有料道路',area:'千葉',dist:'17km',time:'約20分',diff:'★',fee:'有料',season:'通年',parking:'一宮・片貝付近に無料Pあり。海の駅九十九里（無料・150台）',best:'通年いつでも空いている穴場路線。夏の海水浴シーズンも有料道路側は渋滞なし',car:'全車OK。ストレート多く乗用車なら余裕',desc:'九十九里浜沿い一直線の爽快ルート。ビーチタワーからの眺望が見事。',tip:'短いけどストレートが気持ちいい。海の駅で海鮮を食べて折り返すのが定番。',tags:['beginner','short'],lat:35.3700,lng:140.3800},
+{id:'sea_05',name:'銚子〜犬吠埼',area:'千葉',dist:'15km',time:'約30分',diff:'★',fee:'無料',season:'通年',parking:'犬吠埼灯台P（無料・50台）。元日は早朝から満車になるので注意',best:'元日の日の出前後は大混雑。通常は平日・週末問わず空いている',car:'全車OK。道幅広く問題なし',desc:'関東最東端の犬吠埼灯台へ。君ヶ浜海岸の「月への階段」現象と漁港の海鮮丼。犬吠埼から南へ少し足を伸ばすと60mの断崖絶壁・屏風ヶ浦（東洋のドーバー）が現れる。',tip:'初日の出スポットとしても有名。屏風ヶ浦は歩いて10分の絶景なので寄る価値大。',tags:['beginner','gourmet'],spots:[{name:'屏風ヶ浦（東洋のドーバー）',type:'view',season:'通年'},{name:'銚子漁港 海鮮丼',type:'gourmet',season:'通年'}],lat:35.7346,lng:140.8266},
+{id:'sea_06',name:'大洗海岸',area:'茨城',dist:'20km',time:'約30分',diff:'★',fee:'無料',season:'通年',parking:'大洗サンビーチP（夏季有料500円・300台）。磯前神社前無料P',best:'ネモフィラシーズン（4月中旬〜5月上旬）の週末は9時前に到着必須。通常は空いている',car:'全車OK。海沿いの平坦な道で走りやすい',desc:'快水浴場百選の大洗サンビーチと磯前神社の「神磯の鳥居」。春はひたちなか海浜公園のネモフィラ（450万本）が丘を青に染め、大洗と合わせて茨城海岸の黄金ドライブが成立する。',tip:'那珂湊おさかな市場の回転寿司は安くて旨い。春はネモフィラとセットで半日完結。',tags:['beginner','gourmet'],spots:[{name:'ひたちなか海浜公園 ネモフィラ',type:'hana',season:'4〜5月'},{name:'花貫渓谷 紅葉',type:'koyo',season:'11月'},{name:'五浦海岸 六角堂',type:'view',season:'通年'}],lat:36.3130,lng:140.5750},
+{id:'sea_07',name:'熱海ビーチライン',area:'静岡',dist:'6km',time:'約10分',diff:'★',fee:'有料',season:'通年',parking:'熱海駅周辺に有料P多数（700〜1,000円）。ビーチライン内は停車不可',best:'通年空いているが夏の海水浴シーズンは熱海市街に向かう一般道が渋滞。有料道路本線は影響なし',car:'全車OK。短距離なので何でも走れる',desc:'熱海の海岸沿い自動車専用道路。走った後に日帰り温泉→海鮮のコンボが最高。',tip:'ドライブの「おまけ」が豪華。走り＋温泉＋海鮮の三点セット。',tags:['short','onsen'],lat:35.0970,lng:139.0760}
+],
+winding:[
+{id:'wind_01',name:'ターンパイク箱根',area:'神奈川',dist:'15.5km',time:'約30分',diff:'★★',fee:'520円',season:'通年',parking:'大観山展望台P（無料・50台）。週末は満車になることも。小田原側出口に仮設Pあり',best:'平日終日・週末は早朝7〜9時がベスト。紅葉シーズンの週末は9時以降渋滞',car:'FF含む全車OK。積雪時はスタッドレス必須',desc:'道幅広く初心者も安心の有料ワインディング。高低差1,000mで富士山と芦ノ湖のパノラマ。10月下旬の紅葉シーズンは大観山展望台の眺めが別格になる。',tip:'ワインディング入門に最適。大観山の展望台は必ず寄って。スタート前に小田原城（春は桜）を組み合わせると1日ルートが完成する。',tags:['beginner','scenic'],spots:[{name:'大観山展望台',type:'view',season:'通年（紅葉は10月下旬）'},{name:'小田原城',type:'rekishi',season:'春（桜）'}],lat:35.2360,lng:139.1430},
+{id:'wind_02',name:'奥多摩周遊道路',area:'東京',dist:'19.7km',time:'約40分',diff:'★★★',fee:'無料',season:'春〜秋',parking:'月夜見第一駐車場（無料・30台）。早朝は満車になりやすい',best:'平日早朝〜8時が空いていてベスト。週末は白バイ巡回多い。冬季閉鎖（11月下旬〜4月）に注意',car:'FF可。低速コーナー多いので車高の高いSUVは不利。スポーツカー向き',surface:'普通',hazards:['白バイ','冬季閉鎖'],desc:'東京都内の本格山岳ワインディング。走り屋のメッカ。複合コーナーが点在する中級ルート。',tip:'都内最強のワインディング。週末はバイクも白バイも多いので平日推奨。',tags:['autumn','touge'],lat:35.7780,lng:139.0100},
+{id:'wind_03',name:'道志みち',area:'神奈川〜山梨',dist:'60km',time:'約1.5時間',diff:'★★',fee:'無料',season:'春〜秋',parking:'山中湖周辺に有料P多数（500〜800円）。途中の道の駅どうしで休憩可',best:'平日終日OK。週末はバイクが多く追いつくこともある。紅葉（10月）の週末は終点周辺が渋滞',car:'FF含む全車OK。ただし全長60kmあるのでATよりMT車が楽しい',desc:'信号がほぼないロングワインディング。走り切ると山中湖と富士山が出迎える。',tip:'距離が長くロングドライブ好きに最適。ゴールの富士山ビューで達成感がすごい。',tags:['long','scenic'],lat:35.6130,lng:139.2280},
+{id:'wind_04',name:'芦ノ湖スカイライン',area:'神奈川〜静岡',dist:'10.7km',time:'約20分',diff:'★★',fee:'860円',season:'通年',parking:'芦ノ湖展望公園P（無料・30台）。ターンパイクとセットなら大観山Pも利用可',best:'平日終日・週末の早朝がベスト。霧が出やすいので晴天の午前中推奨',car:'FF含む全車OK。積雪時は通行止めになることが多い',desc:'箱根外輪山の尾根を走る穏やかなワインディング。杓子峠から富士山を一望。',tip:'ターンパイクとセットが箱根の黄金ルート。芦ノ湖カレーもGood。',tags:['scenic','gourmet'],lat:35.2050,lng:139.0270},
+{id:'wind_05',name:'椿ライン',area:'神奈川',dist:'15km',time:'約30分',diff:'★★★',fee:'無料',season:'春〜秋',parking:'湯河原周辺に無料P数か所あり。路肩駐車は厳禁',best:'平日早朝が最高。週末は対向車が多いので神経を使う。落石注意（雨後は特に）',car:'FR・MR推奨。FFでも走れるが楽しさは半減。幅員狭いので大型車は注意',surface:'荒れ気味',hazards:['落石注意','幅員狭小'],desc:'湯河原→箱根のテクニカルルート。タイトコーナーが連続し走りごたえ抜群。',tip:'ターンパイクの裏道的存在。こっちの方がテクニカルで楽しいという人も。',tags:['onsen'],lat:35.1460,lng:139.1020},
+{id:'wind_06',name:'碓氷峠（旧道）',area:'群馬〜長野',dist:'12km',time:'約30分',diff:'★★★★',fee:'無料',season:'春〜秋',fuel_warning:true,parking:'めがね橋付近に無料P（50台）あり。路肩停車は絶対禁止',best:'平日早朝が至高。週末は対向バイクが多く集中できない。紅葉ピーク（10月下旬）の落ち葉は滑るので注意',car:'FR・MR推奨。FFはアンダーステアが出やすい。AWDは安心だが面白さ半減',surface:'良好',hazards:['落ち葉（秋）','対向バイク多'],desc:'184個のカーブが連続する上級ワインディング。直線がほぼなく全区間が走りの連続。近くに富岡製糸場（世界遺産）があり、ドライブと歴史観光を組み合わせやすい。',tip:'上級者向け。一度走ると病みつきになる。紅葉時期は落ち葉に注意。',tags:['autumn','long','touge','initiald'],spots:[{name:'富岡製糸場',type:'rekishi',season:'通年'},{name:'碓氷峠 めがね橋',type:'rekishi',season:'通年'}],lat:36.3410,lng:138.7590},
+{id:'wind_07',name:'いろは坂',area:'栃木',dist:'16km',time:'約30分',diff:'★★★',fee:'無料',season:'紅葉（10月）',hazards:['紅葉期大渋滞','一方通行（上下別道）'],parking:'明智平P（有料500円・200台）。紅葉ピーク時は5時でも満車になる',best:'紅葉シーズンは平日でも朝6時必着。通常時は平日終日OK。第一（下り）と第二（上り）は一方通行',car:'FF含む全車OK。急カーブ連続なのでAT車の方が気楽。スポーツカーは車幅に注意',desc:'48か所の急カーブに「いろは」の看板。明智平から中禅寺湖と華厳の滝が一望。関東紅葉の聖地であり、10月中旬の峠は炎のように色づく。',tip:'紅葉シーズンは朝6時前必着。明智平ロープウェイからの眺め、華厳の滝、中禅寺湖の3点セットで寄り道が止まらない。',tags:['autumn','scenic'],spots:[{name:'明智平展望台（ロープウェイ）',type:'view',season:'紅葉10月中旬'},{name:'華厳の滝',type:'view',season:'通年'},{name:'中禅寺湖',type:'view',season:'通年'}],lat:36.7450,lng:139.5830},
+{id:'wind_08',name:'筑波パープルライン',area:'茨城',dist:'12km',time:'約25分',diff:'★★',fee:'無料',season:'通年',parking:'朝日峠P（無料・20台）、つつじヶ丘P（無料・100台）',best:'平日終日空いている穴場。週末も渋滞はほぼなし。茨城で最も気楽に走れるワインディング',car:'FF含む全車OK。道幅広めで走りやすい',desc:'筑波山の尾根を走る爽快コース。朝日峠から関東平野一望。晴れれば富士山も。',tip:'茨城のワインディングは穴場。空いてて走りやすい。',tags:['beginner','scenic'],lat:36.2100,lng:140.0800},
+{id:'wind_09',name:'ヤビツ峠',area:'神奈川',dist:'15km',time:'約35分',diff:'★★★',fee:'無料',season:'春〜秋',parking:'ヤビツ峠P（無料・10台のみ）。早朝でないと満車。麓の名古木交差点付近のコンビニ駐車場は利用禁止',best:'早朝6〜8時が理想。ロードバイクが多いので追い越し厳禁。夜間は真っ暗で危険',car:'小型車・スポーツカー向き。大型車は離合困難。FF可だが幅員狭い箇所あり',surface:'普通',hazards:['ロードバイク多','幅員狭小','夜間危険'],desc:'秦野から丹沢の懐へ駆け上がる神奈川屈指のテクニカルワインディング。ロードバイクの聖地としても有名。峠上からは相模湾と江ノ島を望める。菜の花台展望台は見逃し厳禁。',tip:'菜の花台展望台は車を停めて必ず眺めること。塔ノ岳登山客とのすれ違いに注意。春の新緑・秋の紅葉が格別。大山阿夫利神社まで足を伸ばすとさらに満足度が上がる。',tags:['scenic','autumn'],spots:[{name:'菜の花台展望台',type:'view',season:'通年'},{name:'大山阿夫利神社',type:'rekishi',season:'通年'}],lat:35.4350,lng:139.1780},
+{id:'wind_10',name:'房総 峠道×温泉ルート',area:'千葉',dist:'70km',time:'約2時間',diff:'★★',fee:'無料',season:'通年（紅葉は11月）',parking:'養老渓谷駅周辺に無料P（100台）あり。奥養老温泉に宿泊者専用Pあり（日帰り入浴者は要確認）',best:'平日終日OK。紅葉ピーク（11月上旬）の週末は養老渓谷周辺が渋滞。早朝9時前に通過がベスト',car:'FF含む全車OK。峠道は狭いが慎重に走れば大型でも通れる',desc:'千葉で唯一ワインディングと呼べる鹿野山（県道93号）の急坂から始まり、清澄山（県道81号）の林間峠道→養老渓谷の紅葉渓谷→奥養老温泉で締める千葉完結ルート。都心から下道で行ける秘境感。',tip:'九十九谷展望公園の雲海は秋冬早朝限定の絶景。養老温泉は日帰り入浴1000円以下で入れる穴場。紅葉は11月上旬がピーク、千葉では遅めなので混雑を避けやすい。',tags:['onsen','autumn','scenic'],spots:[{name:'九十九谷展望公園（雲海）',type:'view',season:'秋冬 早朝'},{name:'養老渓谷 紅葉',type:'koyo',season:'11月上旬'},{name:'奥養老温泉',type:'onsen',season:'通年'},{name:'勝浦朝市',type:'gourmet',season:'通年'}],lat:35.2500,lng:140.0500}
+],
+shutoko:[
+{id:'shuto_01',name:'C1＋レインボーブリッジ',area:'東京',dist:'30km',time:'約40分',diff:'★★',fee:'300円〜',season:'通年',parking:'首都高内は走行中のため駐車なし。辰巳第一PAに停車可（無料・深夜混雑）',best:'深夜0〜5時が空いていて景色も最高。日曜深夜がベスト。平日の22時以降もOK',car:'全車OK。首都高は制限速度60〜80kmなのでどんな車でも楽しめる',desc:'首都高夜景の王道。C1内回りで東京タワー横を通過しレインボーブリッジへ。',tip:'C1内回りの方が東京タワー寄り。辰巳第一PAで夜景を満喫すべし。',tags:['nightrec','date'],lat:35.6762,lng:139.7500},
+{id:'shuto_02',name:'ベイブリッジ＋大黒PA',area:'東京〜横浜',dist:'100km',time:'約2時間',diff:'★★★',fee:'300円〜',season:'通年',parking:'大黒PA（無料・600台）。金曜深夜は満車になるが回転は早い',best:'金曜深夜23時〜が一番熱い。スーパーカーが集結する。平日夜も雰囲気を楽しめる',car:'全車OK。大黒PAは見るだけでも満足できるので見物目的なら何でも',surface:'良好',hazards:['Nシステム多'],desc:'海抜69.2mのベイブリッジからみなとみらい夜景。大黒PAは車好きの聖地。',tip:'大黒PAは金曜深夜が一番アツい。スーパーカーからチューニングカーまで集結。',tags:['nightrec','long','jdm','nightmeet'],lat:35.4770,lng:139.6650},
+{id:'shuto_03',name:'川崎工場夜景（K6）',area:'東京〜川崎',dist:'70km',time:'約1.5時間',diff:'★★',fee:'300円〜',season:'通年',parking:'首都高内走行中のためPAは利用しながら進む。川崎港湾部に工場夜景鑑賞スポットあり（無料）',best:'深夜0〜4時が工場稼働状況と光の量が最高。平日・週末問わずOK',car:'全車OK。工場地帯なのでトラックが多い点に注意',desc:'K6川崎線で工場地帯を走行。工場のライトアップがSF映画のような異世界感。',tip:'首都高で一番「異世界感」のあるルート。助手席の人に撮影してもらって。',tags:['nightrec'],lat:35.5300,lng:139.7700},
+{id:'shuto_04',name:'スカイツリー（6号）',area:'東京',dist:'20km',time:'約30分',diff:'★★',fee:'300円〜',season:'通年',parking:'首都高走行中のため駐車なし。スカイツリー周辺の有料P（1,000円〜）を起点に',best:'深夜〜早朝の空いている時間がベスト。スカイツリーの特別ライトアップ日は特に美しい',car:'全車OK。コース短いので何でも楽しめる',desc:'6号向島線でスカイツリー真横を通過。荒川上からの眺めがベストビュー。',tip:'堀切JCTから6号に入った直後がベストビューポイント。一瞬なので見逃し注意。',tags:['nightrec','short'],lat:35.7100,lng:139.8100}
+],
+circuit:[
+{id:'circ_01',name:'富士スピードウェイ',area:'静岡',dist:'4,563m',time:'—',diff:'★★★★',fee:'走行会',season:'通年',parking:'FSW第1〜4駐車場（無料・走行会参加者）。観戦は別途有料',best:'走行会スケジュールは公式サイトで要確認。夏の走行枠は路面温度が高いため注意',car:'公道走行可能なら基本OK。ただし最低スペックの規定あり。ヘルメット必携',desc:'国内最長級ストレート約1.5km。元F1開催のハイスピードコース。',tip:'ストレートで自車の最高速を体験できる。ブレーキは万全に。',tags:['scenic'],lat:35.3722,lng:138.9275},
+{id:'circ_02',name:'筑波 TC2000',area:'茨城',dist:'2,045m',time:'—',diff:'★★★',fee:'走行会',season:'通年',parking:'TC2000専用P（無料・走行会参加者のみ）',best:'走行会は毎週末開催が多い。夏の昼間走行は路面温度60℃超になることも',car:'スポーツカー向き。ヘルメット・グローブ必携。ロールケージ規定あり',surface:'良好',desc:'タイムアタックの聖地。バリエーション豊かなコーナーが腕を試す。',tip:'タイムを縮める楽しさは沼。まず走行会で空気を味わって。',tags:['timeattack','jdm'],lat:36.1600,lng:139.9500},
+{id:'circ_03',name:'筑波 TC1000',area:'茨城',dist:'1,039m',time:'—',diff:'★★',fee:'走行会',season:'通年',parking:'TC1000専用P（無料）。TC2000とは別エリア',best:'初心者向けの走行会が週末に頻繁に開催。予約制なのでWebで事前申込み必須',car:'普通車OK。ヘルメット・グローブが必要。フルバケットシートは不要',desc:'入門者向けショートコース。速度域が低く安心。体験走行あり。',tip:'初サーキットはここ。速度が低い＝怖くない＝ちゃんと学べる。',tags:['beginner'],lat:36.1600,lng:139.9500},
+{id:'circ_04',name:'袖ヶ浦フォレスト',area:'千葉',dist:'2,436m',time:'—',diff:'★★★',fee:'走行会',season:'通年',parking:'袖ヶ浦フォレストレースウェイP（無料・参加者）。アクアライン経由で都心から60分',best:'走行会は月2〜3回開催。HPで確認要。夜間走行イベントもあり',car:'スポーツカー向き。普通の乗用車でも体験可能な走行会もあり',desc:'アクアラインですぐの好アクセス。テクニカルなレイアウトが人気。',tip:'都心から近いのが最大の魅力。走行後にドイツ村にも寄れる。',tags:[],lat:35.4350,lng:139.9750},
+{id:'circ_05',name:'もてぎ',area:'栃木',dist:'4,801m',time:'—',diff:'★★★★',fee:'走行会',season:'通年',parking:'もてぎP（無料・2000台超）。施設が広大なので案内に従う',best:'走行会は事前申込み必須。MotoGP開催週は一般走行不可。ファミリー向けイベントも多い',car:'国際規格サーキット。車種制限あり。詳細はHPで確認',desc:'MotoGP開催の国際級サーキット。家族向けアトラクションも充実。',tip:'「家族でもてぎ行こう」で自分はサーキット、家族はアスレチック。',tags:[],lat:36.5320,lng:140.2280},
+{id:'circ_06',name:'本庄サーキット',area:'埼玉',dist:'800m',time:'—',diff:'★',fee:'3,500円',season:'通年',parking:'本庄サーキットP（無料・100台）。予約不要で当日参加できる',best:'週末はほぼ毎週オープン。初心者向けの体験走行は予約不要。初めての人は午前中に行くと丁寧に案内してもらえる',car:'普通のコンパクトカーでOK。ヘルメット貸し出しあり（無料）。最も敷居が低い',desc:'コンパクトなミニサーキット。低コストで手軽にサーキット体験。',tip:'一番敷居が低い。「サーキットってどんなもん？」って人はここから。',tags:['beginner','short'],lat:36.2400,lng:139.1600}
+],
+night:[
+{id:'night_01',name:'首都高 夜景グランドツアー',area:'東京〜横浜',dist:'150km',time:'約2.5時間',diff:'★★★',fee:'300円〜',season:'通年',parking:'出発点の新宿周辺に有料P多数。辰巳・大黒PAを休憩地点に使う',best:'深夜0〜4時。日曜深夜は特にトラックが少なく走りやすい。天気は晴れ一択',car:'全車OK。長距離走行なのでATの方が楽。スポーツカーは首都高のギャップに注意',desc:'東京タワー、スカイツリー、レインボーブリッジ、ベイブリッジ、みなとみらいを一気に制覇。',tip:'満腹コース。これで首都高夜景は完全制覇。',tags:['long','nightrec'],lat:35.6896,lng:139.6921},
+{id:'night_02',name:'お台場〜ゲートブリッジ',area:'東京',dist:'15km',time:'約30分',diff:'★',fee:'無料',season:'通年',parking:'若洲海浜公園P（無料・600台）。日没後は比較的空いている',best:'日没30分前に到着が鉄則。夕焼けからライトアップへの変化を楽しむ。週末でも18時以降は空く',car:'全車OK。一般道なので何でも走れる',desc:'若洲海浜公園からライトアップされたゲートブリッジを間近に。日没前後が美しい。',tip:'日没30分前に到着がベスト。夕焼け→ライトアップの変化が感動的。',tags:['beginner','date'],lat:35.6320,lng:139.8380},
+{id:'night_03',name:'湘南平 展望夜景',area:'神奈川',dist:'6.5km',time:'約15分',diff:'★',fee:'無料',season:'通年',parking:'湘南平P（無料・50台）。平日夜は空いているが週末は混む。22時以降はほぼ貸切',best:'平日の日没後〜23時がデートに最適。雨上がりの空気が澄んだ夜は夜景が鮮明',car:'全車OK。ただし夜間は道幅の判断が難しいため初めての人は昼に下見推奨',desc:'海抜181mの展望台から神奈川の街並みと相模湾を一望。恋人の聖地。',tip:'デート最強スポット。平日夜なら展望台が貸切状態。',tags:['date','short'],lat:35.3250,lng:139.3130},
+{id:'night_04',name:'横浜みなとみらい',area:'神奈川',dist:'10km',time:'約30分',diff:'★',fee:'無料',season:'通年',parking:'みなとみらいPに複数あり（有料1,000円前後）。18時以降は混雑するが回転は早い',best:'19〜21時がライトアップの一番きれいな時間帯。年末は特に混雑',car:'全車OK。一般道走行なので駐車場への出入りだけ注意',desc:'大さん橋→赤レンガ→みなとみらい→ベイブリッジ。観覧車のライトアップを満喫。',tip:'赤レンガ前にコーヒー持ち込みで停車するのが通。',tags:['date','beginner'],lat:35.4500,lng:139.6470},
+{id:'night_05',name:'東京ドイツ村 イルミ',area:'千葉',dist:'園内3km',time:'約30分',diff:'★',fee:'入園料別途',season:'10〜3月',parking:'ドイツ村内P（無料・1,000台）。入場料別途1,000〜2,500円。週末は入場まで渋滞あり',best:'平日17〜20時が最も空いていてゆっくりドライブできる。クリスマス直前の週末は大渋滞',car:'普通乗用車OK。園内低速走行のため車種は問わない',desc:'冬季限定。車のまま光のトンネルを通過する唯一無二の体験。',tip:'車のまま光のトンネルは他にない。帰りのアクアライン×海ほたるもおまけ。',tags:['date','short'],lat:35.3780,lng:140.0320}
+],
+mountain:[
+{id:'mtn_01',name:'ビーナスライン',area:'長野',dist:'76km',time:'約2.5時間',diff:'★★',fee:'無料',season:'6〜10月',hazards:['午後の霧注意','強風注意'],parking:'美ヶ原高原P（無料・400台）、車山肩P（無料・200台）、霧ヶ峰P（無料）。無料駐車場が豊富',best:'午前中走行が鉄則。午後は霧が出やすく視界ゼロになることも。紅葉（10月）の週末は霧ヶ峰周辺が渋滞',car:'FF含む全車OK。標高2,000m超なのでエアコンの効率が下がる点に注意',desc:'日本最強の高原ドライブ。標高2,000m超でアルプスの大パノラマ。全区間無料。美ヶ原高原の美しの塔は標高2,034mにそびえ、北アルプスを一望できる終点スポット。',tip:'午前中に走るべし。午後は霧が出やすい。美ヶ原のソフトクリームは絶品。7月は車山でニッコウキスゲが咲く。',tags:['scenic','long'],spots:[{name:'美ヶ原 美しの塔',type:'view',season:'7〜10月'},{name:'車山高原 ニッコウキスゲ',type:'hana',season:'7月上旬'},{name:'霧ヶ峰 八島湿原',type:'view',season:'6〜10月'}],lat:36.0020,lng:138.1580},
+{id:'mtn_02',name:'志賀草津高原ルート',area:'群馬〜長野',dist:'42km',time:'約1.5時間',diff:'★★★',fee:'無料',season:'4月下旬〜11月',hazards:['火山ガス規制あり','冬季閉鎖'],parking:'渋峠付近に無料P（30台）あり。草津温泉・湯田中温泉に大型有料Pあり',best:'平日終日・週末の早朝がベスト。火山ガス規制情報を必ず事前確認。6〜8月の残雪期は路面注意',car:'FF可。ただし4WDの方が急勾配で安心。スタッドレスが必要な期間あり（5月連休まで積雪あり）',desc:'日本国道最高地点（2,172m）を通る天空ルート。火山帯から高原へ劇的に変化。',tip:'渋峠ホテルで到達証明書を入手できる。火山規制は出発前に必ず確認。',tags:['scenic'],lat:36.6210,lng:138.5960},
+{id:'mtn_03',name:'榛名山〜伊香保温泉',area:'群馬',dist:'40km',time:'約1時間',diff:'★★★',fee:'無料',season:'春〜秋',hazards:['週末白バイ巡回','聖地巡礼スピード注意'],parking:'榛名山頂P（無料・200台）。伊香保温泉は石段街近くに有料P（500円）',best:'平日早朝〜午前中。週末の昼は温泉街の駐車場が満車になりやすい。頭文字D聖地巡礼は早朝か深夜',car:'FR推奨（頭文字Dのイメージ通り）。FFでも走れるがアンダーステアが強い。4WDは安全だが面白さ半減',desc:'頭文字Dの聖地。メロディーラインの直線と5連ヘアピン。走行後は伊香保温泉へ。',tip:'聖地巡礼はほどほどに安全運転で。伊香保温泉の〆が最高。',tags:['initiald','onsen'],lat:36.5050,lng:139.0130},
+{id:'mtn_04',name:'万座ハイウェー',area:'群馬',dist:'20km',time:'約30分',diff:'★★',fee:'1,070円',season:'4〜11月',parking:'万座温泉スキー場P（有料・冬季）、万座ハイウェー終点Pあり（無料）',best:'平日終日OK。秋（10月）は浅間山の紅葉ビューが最高。冬季閉鎖（12月〜翌3月）に注意',car:'FF含む全車OK。ただし積雪期は通行止めになるので注意',desc:'標高1,800mの万座温泉へ森林を駆け上がる。下りは浅間山ビュー。',tip:'ドライブ＋日本一の硫黄濃度温泉の贅沢コンボ。',tags:['onsen','scenic'],lat:36.5800,lng:138.5900},
+{id:'mtn_05',name:'中禅寺湖スカイライン',area:'栃木',dist:'8km',time:'約20分',diff:'★★★',fee:'無料',season:'4〜11月',parking:'半月山P（無料・50台）。紅葉ピーク時は5時でも満車。いろは坂の渋滞を回避して半月山から入るのがコツ',best:'紅葉シーズン（10月中旬）の平日早朝が唯一の正解。通常時は平日ならいつでもOK',car:'小型車推奨。大型車は半月山展望台への林道で離合困難になることがある',desc:'名道50選。ヘアピン連続で高度を上げ半月山展望台から中禅寺湖と男体山を一望。秋の紅葉期は中禅寺湖が眼下に広がる絶景が待つ。',tip:'いろは坂とセットが定番。紅葉期は絶景だが渋滞も日本屈指。半月山展望台からの湖の俯瞰は必見。',tags:['autumn','scenic'],spots:[{name:'半月山展望台',type:'view',season:'紅葉10月中旬'},{name:'竜頭の滝',type:'view',season:'通年'},{name:'中禅寺湖 遊覧船',type:'view',season:'4〜11月'}],lat:36.7390,lng:139.5080},
+{id:'mtn_06',name:'富士山スカイライン',area:'静岡',dist:'30km',time:'約1時間',diff:'★★★',fee:'無料',season:'4月下旬〜11月',hazards:['マイカー規制（7〜9月）','高山病注意'],fuel_warning:true,parking:'五合目P（無料・200台）。夏のマイカー規制期間（7〜9月）は麓からシャトルバス必須',best:'早朝（5〜7時）が雲海ビューと交通量の少なさで最高。マイカー規制期間は事前確認必須',car:'FF含む全車OK。ただし高度2,400mなのでエンジンパワーダウンあり。ターボ車が有利',desc:'富士山の南側を五合目（標高2,400m）まで直登できる唯一のルート。森林限界を超え景色が劇的に変わる。',tip:'五合目の駐車場から見下ろす雲海は別世界。夏はマイカー規制があるので事前確認必須。下りのブレーキ管理に注意。',tags:['scenic'],lat:35.3400,lng:138.7300},
+{id:'mtn_07',name:'箱根スカイライン',area:'静岡',dist:'3.6km',time:'約10分',diff:'★★',fee:'360円',season:'通年',parking:'芦ノ湖スカイラインと共有P。箱根SL単体では途中停車場所なし',best:'芦ノ湖SLとセットで走るのが前提。霧の多い午後より晴れた午前中推奨',car:'FF含む全車OK。短い有料道路なので車種は問わない',desc:'芦ノ湖スカイラインの延長線。短いが箱根外輪山の尾根を走り、富士山の眺望が抜群。御殿場方面へ抜けられる。',tip:'芦ノ湖SL→箱根SLの連続走行が気持ちいい。短いけど360円の価値は十分ある。帰りに御殿場アウトレットも寄れる。',tags:['scenic','short'],lat:35.2300,lng:138.9950},
+{id:'mtn_08',name:'那須高原線（旧ボルケーノHW）',area:'栃木',dist:'10km',time:'約20分',diff:'★★',fee:'無料',season:'4〜11月',parking:'峠の茶屋P（無料・50台）。紅葉ピーク（10月上旬）の週末は早朝8時でも満車',best:'紅葉は関東最速の10月上旬がピーク。週末は8時前到着が必須。平日は終日空いている',car:'FF含む全車OK。峠の茶屋近くは急勾配なのでATはブレーキに注意',desc:'那須岳の中腹へ向かう高原道路。終点の峠の茶屋駐車場からは那須高原を一望。春のツツジ、秋の紅葉が見事。',tip:'那須は温泉＋高原ドライブ＋牧場グルメの三拍子。紅葉は10月上旬が見頃で関東では早め。殺生石も一見の価値あり。',tags:['autumn','onsen'],spots:[{name:'殺生石',type:'view',season:'通年'},{name:'那須温泉',type:'onsen',season:'通年'},{name:'那須高原 ツツジ',type:'hana',season:'5〜6月'}],lat:37.1100,lng:139.9650},
+{id:'mtn_09',name:'金精峠（国道120号）',area:'栃木〜群馬',dist:'25km',time:'約40分',diff:'★★★',fee:'無料',season:'4月下旬〜12月',hazards:['冬季閉鎖（12〜4月）','開通直後は残雪'],fuel_warning:true,parking:'菅沼P（無料・50台）、丸沼高原P（無料）。戦場ヶ原は三本松P（無料・200台）',best:'紅葉（10月上旬）の平日がベスト。冬季閉鎖が12月〜4月と長い。開通直後の4月下旬は残雪があり景色が最高',car:'FF可。ただし積雪・凍結時は4WD+スタッドレス必須。開通直後は路肩に雪が残る',desc:'日光と沼田を結ぶ標高1,843mの峠道。金精トンネルを抜けると群馬側の景色が一変。戦場ヶ原や丸沼高原を経由。沼田側に下りると東洋のナイアガラと呼ばれる吹割の滝に立ち寄れる。',tip:'日光側から登ると戦場ヶ原→湯ノ湖→金精峠と景色が次々変わる。冬季閉鎖が長い（12月〜4月）ので要注意。沼田のりんご直売所は10月が旬。',tags:['scenic','long'],spots:[{name:'吹割の滝（東洋のナイアガラ）',type:'view',season:'通年'},{name:'戦場ヶ原 草紅葉',type:'koyo',season:'10月上旬'},{name:'沼田 りんご直売',type:'gourmet',season:'10月'}],lat:36.7950,lng:139.4200},
+{id:'mtn_10',name:'霧降高原道路',area:'栃木',dist:'18km',time:'約30分',diff:'★★',fee:'無料',season:'通年',parking:'大笹牧場P（無料・500台）、霧降高原キスゲ平P（無料・200台）',best:'ニッコウキスゲは7月上旬の平日早朝がベスト。紅葉（10月下旬）も美しい。通年走行可能で冬でも道路維持されている',car:'FF含む全車OK。冬季は積雪・凍結することがあるのでスタッドレス推奨',desc:'日光市街から霧降高原を経て大笹牧場へ至る高原道路。6月のニッコウキスゲの大群落は圧巻。冬でも走行可能。',tip:'日光東照宮だけで帰るのはもったいない。霧降高原の1,445段の天空回廊（階段）から見る景色がすごい。大笹牧場のジンギスカンも美味い。',tags:['scenic','beginner'],spots:[{name:'大笹牧場 ジンギスカン',type:'gourmet',season:'通年'},{name:'天空回廊（1445段）',type:'view',season:'6月 ニッコウキスゲ'},{name:'霧降高原 紅葉',type:'koyo',season:'10月下旬'}],lat:36.7800,lng:139.6300},
+{id:'mtn_11',name:'鬼押ハイウェー',area:'群馬',dist:'16km',time:'約25分',diff:'★★',fee:'有料',season:'通年',parking:'鬼押出し園P（有料500円・300台）。園内見学は別途入園料',best:'平日終日OK。夏の高原リゾートシーズン（8月）は少し混む。浅間山の冠雪シーズン（10〜11月）の景色が最高',car:'FF含む全車OK。積雪時は通行止めになることがある',desc:'浅間山の噴火で生まれた溶岩原野「鬼押出し」を貫く有料道路。荒涼とした溶岩の大地と浅間山の迫力は唯一無二。',tip:'鬼押出し園は歩いて回れる溶岩の絶景スポット。軽井沢→鬼押→万座ハイウェーとつなげると群馬山岳グランドツアーになる。',tags:['scenic'],lat:36.4700,lng:138.5350},
+{id:'mtn_12',name:'つまごいパノラマライン',area:'群馬',dist:'30km',time:'約40分',diff:'★',fee:'無料',season:'5〜11月',parking:'愛妻の丘P（無料・50台）。農道なので基本的に路肩に停車可',best:'平日終日空いている関東屈指の穴場。夏（7〜8月）のキャベツ収穫期は農業用トラックが増えるが基本的に走りやすい',car:'FF含む全車OK。広域農道で道幅広く、軽自動車でも快適',desc:'嬬恋村のキャベツ畑が広がる丘陵地帯を一直線に走る広域農道。信号がほぼなく、まるで北海道のような開放感。浅間山を正面に望む。',tip:'関東で一番「北海道っぽい」道。夏のキャベツ畑の緑は壮観。愛妻の丘で叫ぶのが定番（恥ずかしいけど）。万座・草津とセットで回れる。',tags:['scenic','beginner'],lat:36.5200,lng:138.5500}
+],
+michinoeki:[
+{id:'michi_01',name:'南房総 道の駅はしご旅',area:'千葉',dist:'55km',time:'約2時間',diff:'★',fee:'無料',season:'通年',parking:'各道の駅に無料P（50〜150台）あり。保田小学校は約50台で混みやすい',best:'平日の午前中が最もスムーズ。週末の道の駅は10〜14時に混雑。花の季節（1〜4月）は平日でも混む',car:'FF含む全車OK。平坦な道が多く走りやすい',desc:'保田小学校→富楽里とみやま→ちくら潮風王国。廃校リノベの給食ランチ、新鮮海鮮、漁船モニュメントを巡る。',tip:'保田小学校の給食は体験必須。富楽里の行列は開店前から。海鮮丼は潮風王国が穴場。',tags:['gourmet','beginner'],lat:35.0800,lng:139.8450},
+{id:'michi_02',name:'秩父グルメ道の駅めぐり',area:'埼玉',dist:'40km',time:'約1.5時間',diff:'★',fee:'無料',season:'通年',parking:'道の駅ちちぶP（無料・150台）。芝桜シーズンは周辺道路全体が渋滞',best:'芝桜（4月下旬〜5月上旬）の週末は6時前到着必須。通常は平日が快適',car:'FF含む全車OK。山間部だが主要道は整備されている',desc:'道の駅ちちぶ→はなぞの→おがわまち。わらじかつ丼、味噌ポテト、秩父そばの郷土料理三昧。秩父の名水も汲める。春は羊山公園の芝桜（4〜5月）が絶品。',tip:'秩父は道の駅＋わらじかつ丼＋温泉のゴールデントライアングル。春は芝桜とのセットが最強。',tags:['gourmet','onsen'],spots:[{name:'羊山公園 芝桜',type:'hana',season:'4〜5月'},{name:'長瀞 ライン下り',type:'view',season:'春〜秋'},{name:'権現堂堤 桜＋菜の花',type:'hana',season:'3〜4月'}],lat:35.9920,lng:139.0860},
+{id:'michi_03',name:'北関東 道の駅グランプリ街道',area:'群馬〜栃木',dist:'120km',time:'約3時間',diff:'★★',fee:'無料',season:'通年',parking:'川場田園プラザP（無料・500台）。ろまんちっく村P（無料・300台）',best:'川場田園プラザは週末10〜14時がピーク。平日午前中が狙い目。長距離なので日帰りなら7時出発が現実的',car:'FF含む全車OK。高速道路区間あり（北関東道）',desc:'全国1位の川場田園プラザ→ろまんちっく村。自家製クラフトビール、ヨーグルト、農業体験。一日遊べるスケール。',tip:'川場田園プラザだけで半日潰せる。来場客の7割がリピーター、それが全て。ろまんちっく村は温泉もある。',tags:['gourmet','long'],lat:36.7200,lng:139.1000},
+{id:'michi_04',name:'茨城 海鮮＆農産物ロード',area:'茨城',dist:'90km',time:'約2.5時間',diff:'★★',fee:'無料',season:'通年',parking:'まくらがの里こがP（無料・200台）。かわプラザP（無料・150台）',best:'平日終日OK。茨城の道の駅は全般的に空いている穴場が多い。常磐道を使えば都心から2時間以内',car:'FF含む全車OK。茨城は平坦で道幅広く、ロングドライブしやすい',desc:'まくらがの里こが→しもつま→常陸大宮かわプラザ。おったまげ天丼、さしま茶ソフト、清流沿いBBQ。農産物直売が充実。',tip:'まくらがの里のおったまげ天丼は名前通りデカい。しもつまの展望台から筑波山ビュー。かわプラザはBBQが最高。',tags:['gourmet','long'],lat:36.1900,lng:139.8200},
+{id:'michi_05',name:'八王子〜相模湖 都心最速道の駅',area:'東京〜神奈川',dist:'30km',time:'約1時間',diff:'★',fee:'無料',season:'通年',parking:'道の駅八王子滝山P（無料・100台）。週末の朝9時前に確保必須',best:'平日の開店直後（9時）が品揃え最高で空いている。週末の昼はP満車・売り切れ続出',car:'FF含む全車OK。都市近郊なので交通量多め',desc:'都内唯一の道の駅「八王子滝山」→相模湖周辺。八王子ラーメン、江戸野菜、TOKYO X豚まんなど都市型道の駅グルメ。',tip:'八王子滝山は東京唯一の道の駅。八王子ラーメン650円は安い旨い。週末は朝一で行かないと駐車場が埋まる。',tags:['gourmet','beginner','short'],lat:35.6920,lng:139.3250}
+],
+onsen:[
+{id:'onsen_01',name:'箱根日帰り温泉めぐり',area:'神奈川',dist:'35km',time:'約1.5時間',diff:'★★',fee:'ターンパイク有料',season:'通年',parking:'箱根湯本周辺に有料P多数（800〜1,200円）。仙石原の「ポーラ美術館」付近は無料P200台',best:'平日の午前中が最もスムーズ。土日は箱根湯本付近が終日渋滞。秋の紅葉シーズンは特に混む',car:'FF含む全車OK。冬はスタッドレス必須（標高1,000m超）',desc:'小田原から箱根の谷を登り、湯本・強羅・仙石原の3エリアを繋ぐ温泉ドライブ。箱根湯本で足湯スタート、強羅で本格旅館の日帰り入浴、仙石原のすすき草原で〆る王道コース。',tip:'早川沿いの旅館「はつはな」の日帰り入浴が穴場。強羅の「強羅花扇」はランチ付き日帰りが最高。すすき草原は10月がピーク。渋滞は土日午前中に集中するので午後スタートが賢い。',tags:['onsen','scenic','date'],spots:[{name:'箱根湯本 足湯',type:'onsen',season:'通年'},{name:'強羅公園',type:'view',season:'通年'},{name:'仙石原すすき草原',type:'view',season:'10月'}],lat:35.234,lng:139.107},
+{id:'onsen_02',name:'草津・四万温泉はしご',area:'群馬',dist:'65km',time:'約2時間',diff:'★★',fee:'無料',season:'通年',parking:'草津温泉に大型P多数（有料500〜800円）。四万温泉は積善館前P（無料・30台）',best:'草津は通年混む。平日でも昼は渋滞。四万は週末でも比較的空いている。朝から四万→夕方に草津が効率的',car:'FF含む全車OK。冬は両方ともスタッドレス必須（山岳地帯）',desc:'日本三名泉の草津と日本三大秘湯の四万を同日に巡る関東最強の温泉ドライブ。四万は積善館の元禄の湯でジブリ感を満喫、草津は湯畑の圧倒的スケールでフィニッシュ。',tip:'四万は朝イチで。草津の湯畑は夜のライトアップも見事。はしご湯は体力消耗するので一湯ずつしっかり浸かること。「煮川の湯」など草津の共同浴場は無料で入れる穴場。',tags:['onsen','long','scenic'],spots:[{name:'四万温泉 積善館 元禄の湯',type:'onsen',season:'通年'},{name:'草津温泉 湯畑',type:'view',season:'通年'},{name:'草津 煮川の湯（無料）',type:'onsen',season:'通年'}],lat:36.618,lng:138.596},
+{id:'onsen_03',name:'那須温泉郷ドライブ',area:'栃木',dist:'20km',time:'約35分',diff:'★★',fee:'無料',season:'通年',parking:'鹿の湯P（無料・30台）。大丸温泉P（無料・旅館前）',best:'紅葉（10月上旬）は那須で関東最速。週末は那須IC〜湯本まで渋滞するので8時前到着推奨',car:'FF含む全車OK。冬はスタッドレス必須。那須岳山頂付近は凍結注意',desc:'那須岳の中腹に点在する温泉を縦断。日本最古の温泉のひとつ「鹿の湯」、露天風呂から那須岳を望む「大丸温泉旅館」、終点は峠の茶屋駐車場。コンパクトに密度高く楽しめる。',tip:'鹿の湯は硫黄臭が強烈なので着替え必須。大丸温泉の混浴露天は川沿いで開放感が別格。那須は温泉の密度が高く、距離の割にコスパ最強の温泉地。',tags:['onsen','scenic'],spots:[{name:'鹿の湯',type:'onsen',season:'通年'},{name:'大丸温泉旅館',type:'onsen',season:'通年'},{name:'殺生石',type:'view',season:'通年'}],lat:37.11,lng:139.965},
+{id:'onsen_04',name:'鬼怒川・川治温泉ルート',area:'栃木',dist:'30km',time:'約50分',diff:'★',fee:'無料',season:'通年',parking:'鬼怒川温泉駅周辺に有料P多数（500〜800円）。川治温泉は薬師の湯P（無料・50台）',best:'平日終日OK。紅葉（11月）の週末は鬼怒川渓谷沿いが混む。冬は雪景色と温泉のコンボが最高',car:'FF含む全車OK。ゆっくり走る道なので車種は問わない',desc:'鬼怒川渓谷沿いを南から北へ遡る温泉ドライブ。鬼怒川温泉で日帰り入浴の後、更に奥の秘湯・川治温泉へ。断崖と清流が続く渓谷美と温泉のコンボが楽しめる栃木定番コース。',tip:'鬼怒川は「ホテル三日月」の日帰り温泉が施設充実で人気。川治の「薬師の湯」は300円台で入れる穴場。秋の紅葉シーズンは渓谷が燃えるように色づく。',tags:['onsen','beginner','autumn'],spots:[{name:'鬼怒川温泉 ホテル三日月 日帰り',type:'onsen',season:'通年'},{name:'川治温泉 薬師の湯',type:'onsen',season:'通年'},{name:'鬼怒川渓谷',type:'view',season:'紅葉11月'}],lat:36.795,lng:139.658},
+{id:'onsen_05',name:'奥多摩もえぎの湯ルート',area:'東京',dist:'50km',time:'約1.5時間',diff:'★★',fee:'無料',season:'春〜秋',parking:'もえぎの湯P（無料・20台のみ）。奥多摩駅P（有料・100台）を起点にするのが賢い',best:'平日の午前中が理想。週末は11時でもえぎの湯の整理券が配布終了することも。紅葉（11月）は特に人気',car:'FF含む全車OK。奥多摩湖沿いの道路は狭い区間があるが慎重に走れば問題なし',desc:'青梅から奥多摩湖沿いを西へ走る東京の秘境ドライブ。奥多摩湖の水面を眺めながら進み、多摩川源流のもえぎの湯で〆る。都内とは思えない山深さが魅力。帰りの蕎麦も旨い。',tip:'もえぎの湯は週末11時で満員になることも。平日か早朝がベスト。帰りは奥多摩駅前の蕎麦屋が旨い。紅葉シーズン（11月）の奥多摩湖は絶景。駐車場は奥多摩湖で確保が賢い。',tags:['onsen','scenic','autumn'],spots:[{name:'奥多摩湖（小河内ダム）',type:'view',season:'通年'},{name:'もえぎの湯',type:'onsen',season:'通年'},{name:'奥多摩 水と緑のふれあい館',type:'view',season:'通年'}],lat:35.822,lng:139.023},
+{id:'onsen_06',name:'秩父・三峯温泉ルート',area:'埼玉',dist:'55km',time:'約1.5時間',diff:'★★★',fee:'無料',season:'春〜秋',parking:'三峯神社P（無料・200台）。毎月1日の白い氣守り配布日は前日から車中泊が並ぶ',best:'毎月1日は早朝3〜4時到着が必要。通常は平日の午前中がベスト。大滝温泉は17時クローズが多いので逆算して計画を',car:'FF可。山道は狭いが整備されている。急勾配多いのでATのブレーキ管理に注意',desc:'秩父市街から荒川源流の大滝地区を経て標高1,100mの霊山・三峯神社へ至る秘境ルート。道路は狭いが景色は本物で、帰りの「大滝温泉遊湯館」で身体をほぐす。都心から行ける秘境感No.1。',tip:'三峯神社の白い氣守りは毎月1日限定で長蛇の列。三峰口駅周辺の駐車場から乗り合いタクシーが便利。帰り道の大滝温泉遊湯館は露天風呂から荒川が見える絶景湯。',tags:['onsen','scenic','long'],spots:[{name:'三峯神社',type:'rekishi',season:'通年'},{name:'大滝温泉 遊湯館',type:'onsen',season:'通年'},{name:'荒川源流 三峰口',type:'view',season:'通年'}],lat:35.977,lng:138.927}
+],
+flower:[
+{id:'flower_01',name:'権現堂堤→関宿城 春の花ルート',area:'埼玉→千葉',dist:'35km',time:'約1時間',diff:'★',fee:'無料',season:'3〜4月',parking:'権現堂公園P（無料・500台）。桜ピーク時は7時でほぼ満車',best:'桜×菜の花のピークは3月下旬〜4月上旬。平日早朝7〜9時が一番空いていて美しい。週末昼は大混雑',car:'FF含む全車OK。埼玉東部は平坦で走りやすい',desc:'桜1,000本×菜の花の権現堂堤からスタートし、江戸川沿いの菜の花畑を走り、江戸幕府の要衝・関宿城へ。黄色と桜色が視界を埋め尽くす、関東春ドライブの穴場ルート。',tip:'権現堂は3月下旬〜4月上旬がピーク。平日早朝一択。菜の花の香りが車内まで入ってくる。関宿城は博物館として入館でき、天守からの江戸川ビューも美しい。',tags:['beginner','scenic','date'],spots:[{name:'権現堂堤 桜×菜の花',type:'hana',season:'3〜4月'},{name:'関宿城博物館',type:'rekishi',season:'通年'}],lat:36.03,lng:139.755},
+{id:'flower_02',name:'羊山芝桜→長瀞 春の秩父',area:'埼玉',dist:'35km',time:'約1時間',diff:'★',fee:'無料',season:'4〜5月',parking:'羊山公園P（有料500円・300台）。芝桜ピーク時は8時で満車。シャトルバス運行あり',best:'芝桜ピーク（4月下旬〜5月上旬）の平日早朝が唯一の正解。GW中は終日大渋滞',car:'FF含む全車OK。秩父は山間部だが主要道は整備されている',desc:'GWの秩父名物・羊山公園の芝桜丘からスタート。秩父市街でわらじかつ丼を食べて、長瀞の荒川ライン下りでフィニッシュ。ピンクの絨毯と渓谷美が1日で楽しめる春のお手本コース。',tip:'芝桜は4月下旬〜5月上旬。連休中は大渋滞するので早朝6時着で駐車場を確保すること。長瀞ライン下りは予約なしで乗れるが午前中推奨。わらじかつ丼は「野さか」が元祖。',tags:['beginner','scenic','gourmet'],spots:[{name:'羊山公園 芝桜',type:'hana',season:'4〜5月'},{name:'長瀞 ライン下り',type:'view',season:'春〜秋'},{name:'わらじかつ丼 野さか',type:'gourmet',season:'通年'}],lat:36.003,lng:139.085},
+{id:'flower_03',name:'ネモフィラ→大洗 茨城春の道',area:'茨城',dist:'25km',time:'約40分',diff:'★',fee:'無料',season:'4〜5月',parking:'ひたちなか海浜公園P（有料450円・2,000台）。ネモフィラピーク時は早朝から混む',best:'ネモフィラは4月中旬〜5月上旬がピーク。開園（9時）の30分前到着が正解。平日でも混む',car:'FF含む全車OK。茨城の海岸沿いは平坦で走りやすい',desc:'450万本のネモフィラが丘を青一色に染めるひたちなか海浜公園から、神磯の鳥居で有名な大洗磯前神社、那珂湊のおさかな市場へ。茨城海岸の春を1日で制覇できる黄金コース。',tip:'ネモフィラは4月中旬〜5月上旬。開園30分前から並ぶのが正解。那珂湊の回転寿司「めん処みさき」は地元民に人気。帰りに大洗の海鮮市場も立ち寄れる。',tags:['beginner','scenic','gourmet'],spots:[{name:'ひたちなか海浜公園 ネモフィラ',type:'hana',season:'4〜5月'},{name:'大洗磯前神社 神磯の鳥居',type:'rekishi',season:'通年'},{name:'那珂湊おさかな市場',type:'gourmet',season:'通年'}],lat:36.39,lng:140.607},
+{id:'flower_04',name:'館林つつじ→足利フラワーパーク',area:'群馬→栃木',dist:'30km',time:'約50分',diff:'★',fee:'無料',season:'4〜5月',parking:'つつじが岡公園P（有料400円・200台）。足利フラワーパークP（有料400円・500台）',best:'両スポットとも4月中旬〜5月上旬がピーク。足利フラワーパークのライトアップ（日没後）はデートに最強',car:'FF含む全車OK。北関東道でアクセス良好',desc:'日本一のつつじの名所・館林つつじが岡公園から、樹齢150年の大藤が圧巻の足利フラワーパークへ。関東最大級の花スポット2箇所を1日でハシゴできる、花好き最高の欲張りルート。',tip:'館林は4月中旬〜下旬、足利フラワーパークは4月下旬〜5月上旬が大藤ピーク。大藤のライトアップが特に幻想的でデートに最適。北関東道で両方アクセス良好。入場料は足利の方がやや高め。',tags:['scenic','date','beginner'],spots:[{name:'館林つつじが岡公園',type:'hana',season:'4月中旬〜下旬'},{name:'あしかがフラワーパーク 大藤',type:'hana',season:'4月下旬〜5月上旬'}],lat:36.247,lng:139.543},
+{id:'flower_05',name:'本栖湖×富士芝桜 春の富士',area:'山梨',dist:'45km',time:'約1.5時間',diff:'★★',fee:'無料',season:'4〜5月',parking:'本栖湖P（無料・100台）。富士芝桜会場周辺は臨時P多数（有料500〜1,000円）',best:'芝桜ピーク（4月下旬〜5月上旬）の平日早朝か夕方以降がベスト。GW中は近隣道路が激混み',car:'FF含む全車OK。富士五湖周辺は道幅広く走りやすい',desc:'千円札の絵柄で有名な本栖湖からの富士山ビューからスタートし、富士芝桜まつり会場へ。一面ピンクの芝桜と雪を残した富士山の対比が圧巻。富士五湖の中でも最も静かな本栖湖も見逃せない。',tip:'芝桜まつりは渋滞必至。朝か夕方以降がベスト。本栖湖畔の無料駐車場が穴場。帰りに富士山スカイラインで五合目まで登るのがセットで最強の組み合わせ。',tags:['scenic','beginner','date'],spots:[{name:'本栖湖（千円札ビュー）',type:'view',season:'通年'},{name:'富士芝桜まつり会場',type:'hana',season:'4〜5月'}],lat:35.476,lng:138.588},
+{id:'flower_06',name:'赤城山麓 コスモスルート',area:'群馬',dist:'45km',time:'約1時間',diff:'★★',fee:'無料',season:'9〜10月',parking:'赤城大沼P（無料・200台）。山頂は早朝でないと混む。麓の広域農道は路肩に停車可',best:'コスモスと草紅葉のダブルピークは10月上〜中旬。平日の午前中が最高。週末は山頂P周辺で渋滞',car:'FF含む全車OK。赤城山頂への道はヘアピン連続なのでMTの方が楽しい。冬はスタッドレス必須',desc:'前橋から赤城山麓の広域農道を走り、山頂の大沼・小沼へ至る秋ドライブ。沿道のコスモスと赤城山のシルエットが絵になる。山頂では草紅葉と澄んだ火口湖が待つ。帰りは赤城温泉で〆。',tip:'10月上〜中旬がコスモスと草紅葉の同時ピーク。赤城山頂の大沼は夜は満天の星空スポット。帰りに赤城温泉郷の日帰り入浴がセットになるのが関東圏からのベストコース。',tags:['scenic','autumn','onsen'],spots:[{name:'赤城山 大沼・小沼',type:'view',season:'通年'},{name:'赤城山麓 コスモス街道',type:'hana',season:'10月'},{name:'赤城温泉郷',type:'onsen',season:'通年'}],lat:36.5,lng:139.18}
+]};
+const ATMOS_BG={sea:'background:linear-gradient(135deg,#e8f4f8,#d0e8f0)',winding:'background:linear-gradient(135deg,#e8f0e6,#cee0c8)',shutoko:'background:linear-gradient(135deg,#eae6f0,#d5cee5)',circuit:'background:linear-gradient(135deg,#f5e8e6,#e8d5d2)',night:'background:linear-gradient(135deg,#dde0ec,#c5c8dc)',mountain:'background:linear-gradient(135deg,#e0ece0,#c8dcc5)',michinoeki:'background:linear-gradient(135deg,#f0ebe0,#e0d8c8)',onsen:'background:linear-gradient(135deg,#fde8e8,#fce0e0)',flower:'background:linear-gradient(135deg,#fce4f0,#fdf0f8)'};
+// ムードバナー用の濃いグラデーション（雰囲気重視）
+const MOOD_GRAD={
+  sea:'linear-gradient(135deg,#0a3d5c 0%,#1a6b8a 60%,#0d4f6e 100%)',
+  winding:'linear-gradient(135deg,#1a3a1a 0%,#2d5a2d 60%,#1a4a1a 100%)',
+  shutoko:'linear-gradient(135deg,#06060f 0%,#0f0f2a 60%,#1a1a3a 100%)',
+  circuit:'linear-gradient(135deg,#3a0000 0%,#7a0000 60%,#a00000 100%)',
+  night:'linear-gradient(135deg,#030308 0%,#080820 60%,#0d0d2a 100%)',
+  mountain:'linear-gradient(135deg,#1a2e0a 0%,#2d4a1a 60%,#3a5a2a 100%)',
+  michinoeki:'linear-gradient(135deg,#2a1e08 0%,#4a3a18 60%,#5a4a28 100%)',
+  onsen:'linear-gradient(135deg,#2a0a0a 0%,#4a1818 60%,#6a2828 100%)',
+  flower:'linear-gradient(135deg,#2a0a1e 0%,#4a1a3a 60%,#6a2a5a 100%)',
+};
+let cur=null;
+function getSvg(c,r,t){if(typeof ROUTE_SVGS==='undefined')return '';const d=ROUTE_SVGS[c];if(!d)return '';const s=d.find(x=>x.id===r);if(!s)return '';return t==='thumb'?s.thumb_svg:s.wide_svg}
+function fb(w,h){return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="'+(h/2)+'" x2="'+(w-5)+'" y2="'+(h/2)+'" stroke="#ddd" stroke-width="2" stroke-linecap="round" stroke-dasharray="4,3"/></svg>'}
+function renderCats(){document.getElementById('catGrid').innerHTML=CATS.map(c=>'<div class="cat-chip" data-c="'+c.id+'" onclick="sel(\''+c.id+'\')" style=""><span class="chip-icon">'+c.icon+'</span><span class="chip-name">'+c.name+'</span><span class="chip-count">'+c.count+'</span></div>').join('')}
+function updateMoodBanner(id){
+  const cat=CATS.find(c=>c.id===id);
+  if(!cat)return;
+  const grad=MOOD_GRAD[id]||'linear-gradient(135deg,#1a1a2a,#2a2a3a)';
+  const hex=CAT_HEX[id]||'#555';
+  const el=document.getElementById('moodBanner');
+  el.style.background=grad;
+  el.innerHTML='<div class="mood-banner-inner">'
+    +'<div class="mood-banner-top">'
+    +'<div class="mood-banner-left">'
+    +'<span class="mood-banner-icon">'+cat.icon+'</span>'
+    +'<div><div class="mood-banner-name">'+cat.name+'</div><div class="mood-banner-count">'+(R[id]||[]).length+' routes</div></div>'
+    +'</div>'
+    +'<button class="mood-banner-back" onclick="goHome(event)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>すべて</button>'
+    +'</div>'
+    +'<div class="mood-banner-tip"><div class="mood-banner-tip-label">🏎️ ドライブ好きの本音</div>'+cat.tip+'</div>'
+    +'</div>';
+  el.classList.add('show');
+  // アクティブチップのスタイル
+  document.querySelectorAll('.cat-chip').forEach(c=>{
+    const active=c.dataset.c===id;
+    c.classList.toggle('active',active);
+    c.style.background=active?hex:'';
+    c.style.borderColor=active?hex:'';
+  });
+}
+function buildTodayRecs(){
+  const d=new Date();const mo=d.getMonth()+1;const dow=d.getDay();// 0=Sun
+  // 季節・曜日で優先カテゴリを決定
+  let picks=[];
+  if(mo>=12||mo<=2){picks=['shutoko','night','circuit'];} // 冬：夜景・首都高
+  else if(mo>=3&&mo<=5){picks=['flower','sea','winding'];} // 春：花・海・ワインディング
+  else if(mo>=6&&mo<=8){picks=['sea','michinoeki','mountain'];} // 夏：海・道の駅・山
+  else{picks=['winding','mountain','flower'];} // 秋：紅葉ワインディング
+  if(dow===0||dow===6){// 週末は走り系を優先
+    picks[0]='winding';
+  } else if(dow>=1&&dow<=4){// 平日夜は首都高
+    picks[2]='shutoko';
+  }
+  const recs=[];
+  picks.forEach(cid=>{
+    const rts=R[cid]||[];
+    if(rts.length){const idx=(d.getDate()+cid.charCodeAt(0))%rts.length;recs.push({cid,r:rts[idx]});}
+  });
+  const moStr=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'][mo-1];
+  const dowStr=['日曜','月曜','火曜','水曜','木曜','金曜','土曜'][dow];
+  const el=document.getElementById('todayRec');
+  if(!el)return;
+  el.innerHTML='<div class="today-rec-head">'
+    +'<div><div class="today-rec-title">今日のおすすめ</div>'
+    +'<div class="today-rec-sub">'+moStr+' '+dowStr+' のドライブ候補</div></div>'
+    +'</div>'
+    +'<div class="today-rec-grid">'
+    +recs.map(({cid,r})=>{
+      const rcData=RC[r.id]||{};
+      const cardMap=makeCardMap(cid,r.id,rcData.startName||'',rcData.endName||'');
+      const diffCount=(r.diff.match(/★/g)||[]).length;
+      const carBadge=getCarBadge(r.car);
+      const bestBadge=getBestBadge(r.best);
+      const tags=(r.tags||[]).slice(0,2).map(t=>{const tg=TAGS[t];return tg?'<span class="rc-label '+tg.cls+'">'+tg.label+'</span>':''}).join('');
+      return '<div class="rc" onclick="sel(\''+cid+'\');openD(\''+cid+'\',\''+r.id+'\')">'+cardMap+'<div class="rc-cat-bar" style="background:'+(CAT_HEX[cid]||'var(--accent)')+'"></div>'+'<div class="rc-body"><div class="rc-top"><div class="rc-name">'+r.name+'</div><div class="rc-area">'+r.area+'</div></div><div class="rc-meta"><span class="rc-tag">'+r.dist+'</span><span class="rc-tag">'+r.time+'</span><span class="rc-tag diff"><span aria-label="難易度'+diffCount+'/4">'+r.diff+'</span></span></div>'+(tags?'<div class="rc-tags">'+tags+'</div>':'')+carBadge+bestBadge+'</div></div>';
+    }).join('')
+    +'</div>'
+    +'<button class="today-rec-random" onclick="showRandomRoute()">🎲 今すぐ走りたい！（ランダム）</button>';
+}
+function showRandomRoute(){
+  const allCids=Object.keys(R);
+  const cid=allCids[Math.floor(Math.random()*allCids.length)];
+  const rts=R[cid]||[];
+  if(!rts.length)return;
+  const r=rts[Math.floor(Math.random()*rts.length)];
+  sel(cid);
+  setTimeout(()=>openD(cid,r.id),120);
+}
+let _curSort='default';
+let _seasonFilter=false;
+function isRouteClosed(r){return r.season&&r.season!=='通年'&&getSeasonBadge(r.season).includes('closed');}
+function getFilteredSortedRoutes(cid){const rts=_seasonFilter?(R[cid]||[]).filter(r=>!isRouteClosed(r)):(R[cid]||[]);return sortRoutes(rts,_curSort);}
+function toggleSeasonFilter(cid){_seasonFilter=!_seasonFilter;document.getElementById('list').innerHTML=renderSortBar(cid)+buildCardList(cid,getFilteredSortedRoutes(cid));}
+function getCarBadge(carStr){if(!carStr)return '';const badges=[];if(/FR|MR/i.test(carStr))badges.push('FR向き');else if(/AWD|4WD|4駆/i.test(carStr))badges.push('AWD向き');if(badges.length===0)return '';return '<div class="rc-car-wrap">'+badges.map(b=>'<span class="rc-carbadge">'+b+'</span>').join('')+'</div>';}
+function getSeasonBadge(seasonStr){if(!seasonStr||seasonStr==='通年')return '';const mo=new Date().getMonth()+1;const openRanges={春:[[3,5]],夏:[[6,8]],秋:[[9,11]],冬:[[12,2]],'春〜秋':[[3,11]],'4月下旬〜11月':[[4,11]],'1〜4月':[[1,4]],'紅葉（10月）':[[10,10]]};let closed=false;const s=seasonStr;if(/冬季閉鎖|冬期閉鎖/.test(s)&&(mo<=3||mo>=11)){closed=true;}else if(/4月下旬〜11月/.test(s)&&(mo<=3||mo>=12)){closed=true;}else if(/春〜秋/.test(s)&&(mo>=12||mo<=2)){closed=true;}else if(/1〜4月/.test(s)&&(mo>=5&&mo<=11)){closed=true;}else if(/紅葉（10月）/.test(s)&&(mo<9||mo>11)){return '<span class="rc-season-badge check">🍂 紅葉シーズン外</span>';}return closed?'<span class="rc-season-badge closed">❄️ 現在休止中</span>':'';}
+function getBestBadge(bestStr){if(!bestStr)return '';if(/深夜|夜/.test(bestStr))return '<div class="rc-best-badge">深夜推奨</div>';if(/早朝/.test(bestStr))return '<div class="rc-best-badge">早朝推奨</div>';if(/平日/.test(bestStr))return '<div class="rc-best-badge">平日推奨</div>';return '';}
+function buildCardList(cid, routes){
+  return routes.map(r=>{
+    const rcData=RC[r.id]||{};
+    const startLbl=rcData.startName||'';const endLbl=rcData.endName||'';
+    const cardMap=makeCardMap(cid,r.id,startLbl,endLbl);
+    const tags=(r.tags||[]).map(t=>{const tg=TAGS[t];return tg?'<span class="rc-label '+tg.cls+'">'+tg.label+'</span>':''}).join('');
+    const spotBadge=(r.spots&&r.spots.length)?'<div class="rc-spot-badge"><span></span>立ち寄り '+r.spots.length+'件</div>':'';
+    const diffCount=(r.diff.match(/★/g)||[]).length;
+    const diffHtml='<span aria-label="難易度'+diffCount+'/4">'+r.diff+'</span>';
+    const carBadge=getCarBadge(r.car);
+    const seasonBadge=getSeasonBadge(r.season);
+    const bestBadge=getBestBadge(r.best);
+    const hazardIcon=(r.hazards&&r.hazards.length)?'<span title="'+r.hazards.join('・')+'" style="font-size:10px;margin-left:3px">⚠️</span>':'';
+    const fuelIcon=r.fuel_warning?'<span title="給油推奨ルート" style="font-size:10px;margin-left:3px">⛽</span>':'';
+    return '<div class="rc" onclick="openD(\''+cid+'\',\''+r.id+'\')">'+cardMap+'<div class="rc-cat-bar" style="background:'+( CAT_HEX[cid]||'var(--accent)')+'"></div>'+'<div class="rc-body"><div class="rc-top"><div class="rc-name">'+r.name+hazardIcon+fuelIcon+'</div><div class="rc-area">'+r.area+'</div></div><div class="rc-meta"><span class="rc-tag">'+r.dist+'</span><span class="rc-tag">'+r.time+'</span><span class="rc-tag diff">'+diffHtml+'</span><span class="rc-tag">'+r.fee+'</span></div>'+(tags?'<div class="rc-tags">'+tags+'</div>':'')+carBadge+bestBadge+seasonBadge+spotBadge+'</div></div>';
+  }).join('');
+}
+function sortRoutes(routes, mode){
+  if(mode==='diff')return [...routes].sort((a,b)=>(a.diff.match(/★/g)||[]).length-(b.diff.match(/★/g)||[]).length);
+  if(mode==='dist')return [...routes].sort((a,b)=>parseFloat(a.dist||0)-parseFloat(b.dist||0));
+  if(mode==='near'&&window._userLat){const haversine=(a,b)=>{const R=6371,dLat=(b[0]-a[0])*Math.PI/180,dLng=(b[1]-a[1])*Math.PI/180,x=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))};return [...routes].sort((a,b)=>haversine([window._userLat,window._userLng],[a.lat,a.lng])-haversine([window._userLat,window._userLng],[b.lat,b.lng]));}
+  return routes;
+}
+function renderSortBar(cid){
+  return '<div class="sort-bar" id="sortBar">'
+    +'<button class="sort-btn'+((_curSort==='default')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'default\')">デフォルト</button>'
+    +'<button class="sort-btn'+((_curSort==='diff')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'diff\')">難易度↑</button>'
+    +'<button class="sort-btn'+((_curSort==='dist')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'dist\')">距離↑</button>'
+    +'<button class="sort-btn'+((_curSort==='near')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'near\')">近い順</button>'
+    +'<button class="sort-btn'+(_seasonFilter?' season-on':'')+'" onclick="toggleSeasonFilter(\''+cid+'\')">✅ 今走れる</button>'
+    +'</div>';
+}
+function applySortFilter(cid, mode){_curSort=mode;document.getElementById('list').innerHTML=renderSortBar(cid)+buildCardList(cid,getFilteredSortedRoutes(cid));}
+function sel(id,skipPush){cur=id;_curSort='default';_seasonFilter=false;if(!skipPush)history.pushState({type:'cat',cid:id},'','#'+id);document.getElementById('empty').style.display='none';updateMoodBanner(id);const sec=document.getElementById('routes');sec.classList.add('show');document.getElementById('list').innerHTML=renderSortBar(id)+buildCardList(id,getFilteredSortedRoutes(id));setTimeout(()=>{if(window.innerWidth<860)sec.scrollIntoView({behavior:'smooth',block:'start'})},80)}
+
+const GEOAPIFY_KEY = '';
+const OSRM_CACHE = {};
+
+// ナビURL一時保存（onclick内でURLを直接埋め込むと&がHTMLエスケープ問題を起こすため）
+let _navFull = '', _navFromHere = '';
+function navTo(key){ window.location.href = key==='full'?_navFull:_navFromHere; }
+
+const RC={
+"onsen_01":{"start":[35.262,139.152],"end":[35.254,139.02],"startName":"小田原駅","endName":"仙石原","via":[[35.234,139.107]]},
+"onsen_02":{"start":[36.595,138.85],"end":[36.618,138.596],"startName":"中之条","endName":"草津温泉","via":[[36.567,138.78]]},
+"onsen_03":{"start":[37.075,140.0],"end":[37.12,139.97],"startName":"那須IC","endName":"大丸温泉","via":[[37.11,139.965]]},
+"onsen_04":{"start":[36.725,139.69],"end":[36.826,139.605],"startName":"今市IC","endName":"川治温泉","via":[[36.795,139.658]]},
+"onsen_05":{"start":[35.79,139.25],"end":[35.799,138.997],"startName":"青梅IC","endName":"もえぎの湯","via":[[35.822,139.023]]},
+"onsen_06":{"start":[35.992,139.086],"end":[35.977,138.927],"startName":"秩父市街","endName":"三峯神社","via":[[35.96,138.99]]},
+"flower_01":{"start":[36.03,139.755],"end":[36.098,139.823],"startName":"権現堂堤","endName":"関宿城","via":[[36.05,139.78]]},
+"flower_02":{"start":[36.003,139.085],"end":[36.123,139.13],"startName":"羊山公園","endName":"長瀞","via":[[35.992,139.086]]},
+"flower_03":{"start":[36.39,140.607],"end":[36.333,140.59],"startName":"ひたちなか海浜公園","endName":"那珂湊おさかな市場","via":[[36.35,140.6]]},
+"flower_04":{"start":[36.247,139.543],"end":[36.298,139.523],"startName":"つつじが岡公園","endName":"あしかがフラワーパーク"},
+"flower_05":{"start":[35.415,138.87],"end":[35.424,138.681],"startName":"山中湖","endName":"富士芝桜まつり","via":[[35.476,138.588]]},
+"flower_06":{"start":[36.41,139.065],"end":[36.554,139.195],"startName":"前橋IC","endName":"赤城大沼","via":[[36.5,139.18]]},
+"sea_01":{"start":[35.3255,139.404],"end":[35.3085,139.5103],"startName":"茅ヶ崎サザンビーチ","endName":"鎌倉","via":[[35.31,139.4812]]},
+"sea_02":{"start":[35.268,139.665],"end":[35.272,139.578],"startName":"横須賀IC","endName":"葉山","via":[[35.14,139.62],[35.152,139.613]]},
+"sea_03":{"start":[34.958,139.755],"end":[35.045,139.88],"startName":"洲崎灯台","endName":"南房総","via":[[34.94,139.82]]},
+"sea_04":{"start":[35.37,140.38],"end":[35.52,140.41],"startName":"一宮料金所","endName":"片貝IC"},
+"sea_05":{"start":[35.7346,140.8266],"end":[35.708,140.868],"startName":"銚子市街","endName":"犬吠埼灯台"},
+"sea_06":{"start":[36.313,140.575],"end":[36.35,140.6],"startName":"大洗海岸","endName":"ひたちなか"},
+"sea_07":{"start":[35.097,139.076],"end":[35.11,139.092],"startName":"熱海BL入口","endName":"熱海市街"},
+"wind_01":{"start":[35.236,139.143],"end":[35.21,139.03],"startName":"小田原料金所","endName":"大観山","via":[[35.22,139.07]]},
+"wind_02":{"start":[35.778,139.01],"end":[35.735,139.07],"startName":"奥多摩側入口","endName":"檜原側","via":[[35.765,139.03]]},
+"wind_03":{"start":[35.613,139.228],"end":[35.415,138.87],"startName":"相模湖IC","endName":"山中湖","via":[[35.52,139.06]]},
+"wind_04":{"start":[35.205,139.027],"end":[35.245,138.99],"startName":"箱根峠","endName":"湖尻"},
+"wind_05":{"start":[35.146,139.102],"end":[35.215,139.025],"startName":"湯河原","endName":"箱根"},
+"wind_06":{"start":[36.341,138.759],"end":[36.345,138.63],"startName":"横川","endName":"軽井沢"},
+"wind_07":{"start":[36.745,139.583],"end":[36.74,139.498],"startName":"清滝","endName":"中禅寺湖","via":[[36.738,139.535]]},
+"wind_08":{"start":[36.21,140.08],"end":[36.226,140.105],"startName":"朝日峠","endName":"つつじヶ丘"},
+"wind_09":{"start":[35.374,139.133],"end":[35.446,139.173],"startName":"秦野市街","endName":"ヤビツ峠","via":[[35.41,139.15]]},
+"wind_10":{"start":[35.308,139.985],"end":[35.247,140.122],"startName":"鹿野山","endName":"奥養老温泉","via":[[35.28,140.05]]},
+"shuto_01":{"start":[35.69,139.695],"end":[35.628,139.776],"startName":"新宿ランプ","endName":"お台場","via":[[35.658,139.765],[35.645,139.76]]},
+"shuto_02":{"start":[35.67,139.75],"end":[35.477,139.665],"startName":"都心","endName":"大黒PA","via":[[35.61,139.78],[35.46,139.65]]},
+"shuto_03":{"start":[35.53,139.77],"end":[35.51,139.74],"startName":"大井JCT付近","endName":"川崎"},
+"shuto_04":{"start":[35.68,139.79],"end":[35.71,139.81],"startName":"箱崎","endName":"向島"},
+"circ_01":{"start":[35.3722,138.9275],"end":[35.3722,138.9275],"startName":"富士スピードウェイ","endName":"富士スピードウェイ"},
+"circ_02":{"start":[36.16,139.95],"end":[36.16,139.95],"startName":"筑波サーキット","endName":"筑波サーキット"},
+"circ_03":{"start":[36.16,139.95],"end":[36.16,139.95],"startName":"筑波サーキット","endName":"筑波サーキット"},
+"circ_04":{"start":[35.435,139.975],"end":[35.435,139.975],"startName":"袖ヶ浦フォレスト","endName":"袖ヶ浦フォレスト"},
+"circ_05":{"start":[36.532,140.228],"end":[36.532,140.228],"startName":"もてぎ","endName":"もてぎ"},
+"circ_06":{"start":[36.24,139.16],"end":[36.24,139.16],"startName":"本庄サーキット","endName":"本庄サーキット"},
+"night_01":{"start":[35.6896,139.6921],"end":[35.675,139.72],"startName":"新宿","endName":"代々木","via":[[35.658,139.765],[35.629,139.776],[35.46,139.65]]},
+"night_02":{"start":[35.632,139.838],"end":[35.625,139.775],"startName":"若洲海浜公園","endName":"お台場","via":[[35.61,139.82]]},
+"night_03":{"start":[35.325,139.313],"end":[35.33,139.35],"startName":"湘南平","endName":"平塚IC"},
+"night_04":{"start":[35.45,139.647],"end":[35.455,139.63],"startName":"大さん橋","endName":"みなとみらい","via":[[35.448,139.643]]},
+"night_05":{"start":[35.378,140.032],"end":[35.378,140.032],"startName":"東京ドイツ村","endName":"東京ドイツ村"},
+"mtn_01":{"start":[36.002,138.158],"end":[36.23,138.12],"startName":"茅野市入口","endName":"美ヶ原高原","via":[[36.105,138.165],[36.16,138.13]]},
+"mtn_02":{"start":[36.621,138.596],"end":[36.78,138.52],"startName":"草津温泉","endName":"湯田中温泉","via":[[36.66,138.525]]},
+"mtn_03":{"start":[36.505,139.013],"end":[36.49,138.93],"startName":"渋川伊香保IC","endName":"伊香保温泉","via":[[36.475,138.89]]},
+"mtn_04":{"start":[36.58,138.59],"end":[36.62,138.525],"startName":"万座HW入口","endName":"万座温泉"},
+"mtn_05":{"start":[36.739,139.508],"end":[36.72,139.47],"startName":"中禅寺湖東岸","endName":"半月山"},
+"mtn_06":{"start":[35.34,138.73],"end":[35.36,138.728],"startName":"水ヶ塚公園","endName":"富士山五合目"},
+"mtn_07":{"start":[35.23,138.995],"end":[35.24,138.97],"startName":"箱根SL入口","endName":"芦ノ湖方面"},
+"mtn_08":{"start":[37.11,139.965],"end":[37.125,139.96],"startName":"那須湯本","endName":"峠の茶屋駐車場"},
+"mtn_09":{"start":[36.795,139.42],"end":[36.78,139.28],"startName":"中禅寺湖","endName":"沼田方面","via":[[36.79,139.38]]},
+"mtn_10":{"start":[36.78,139.63],"end":[36.82,139.58],"startName":"霧降大橋","endName":"大笹牧場"},
+"mtn_11":{"start":[36.47,138.535],"end":[36.44,138.58],"startName":"鬼押出し園","endName":"峰の茶屋"},
+"mtn_12":{"start":[36.52,138.55],"end":[36.51,138.62],"startName":"パノラマライン北","endName":"パノラマライン南"},
+"michi_01":{"start":[35.08,139.845],"end":[34.96,139.955],"startName":"道の駅 保田小学校","endName":"ちくら潮風王国","via":[[35.02,139.86]]},
+"michi_02":{"start":[35.992,139.086],"end":[36.06,139.24],"startName":"道の駅ちちぶ","endName":"道の駅おがわまち","via":[[36.09,139.18]]},
+"michi_03":{"start":[36.72,139.1],"end":[36.59,139.91],"startName":"川場田園プラザ","endName":"ろまんちっく村"},
+"michi_04":{"start":[36.19,139.82],"end":[36.57,140.37],"startName":"まくらがの里こが","endName":"常陸大宮かわプラザ","via":[[36.24,139.99]]},
+"michi_05":{"start":[35.692,139.325],"end":[35.6,139.25],"startName":"道の駅八王子滝山","endName":"相模湖周辺"}
+};
+const STYPE_LABEL={hana:'花',koyo:'紅葉',onsen:'温泉',view:'展望',gourmet:'グルメ',rekishi:'史跡'};
+const STYPE_ICON={hana:'🌸',koyo:'🍁',onsen:'♨️',view:'🗻',gourmet:'🍜',rekishi:'🏯'};
+const SPOT_COLLAPSE=4; // これ以上は折りたたむ
+function buildSpotsHtml(spots){
+  if(!spots||!spots.length)return '';
+  const chips=spots.map((sp,i)=>{
+    const label=STYPE_LABEL[sp.type]||sp.type;
+    const icon=STYPE_ICON[sp.type]||'📍';
+    const q=encodeURIComponent(sp.name);
+    const url='https://maps.google.com/?q='+q;
+    const hidden=i>=SPOT_COLLAPSE?'spots-hidden':'';
+    return '<a href="'+url+'" class="spot-chip '+hidden+'" target="_blank" rel="noopener"><span class="stype '+sp.type+'">'+icon+' '+label+'</span>'+sp.name+'<span class="spot-season">'+sp.season+'</span></a>';
+  }).join('');
+  const toggle=spots.length>SPOT_COLLAPSE
+    ?'<button class="spots-toggle" onclick="toggleSpots(this)">他 '+(spots.length-SPOT_COLLAPSE)+'件を見る ›</button>'
+    :'';
+  return '<div class="mo-spots"><div class="mo-spots-h">📍 立ち寄りスポット（タップでマップ）</div><div class="spots-list">'+chips+toggle+'</div></div>';
+}
+function switchTab(btn, idx){
+  const body = document.getElementById('moBody');
+  body.querySelectorAll('.mo-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  body.querySelectorAll('.mo-tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  // タブ切り替え時に上部へスクロール
+  btn.closest('.mo-sheet') && (btn.closest('.mo-sheet').scrollTop = 0);
+}
+function toggleSpots(btn){
+  const list=btn.parentNode;
+  const hidden=list.querySelectorAll('.spots-hidden');
+  const isOpen=btn.dataset.open==='1';
+  hidden.forEach(el=>el.style.display=isOpen?'':'inline-flex');
+  btn.textContent=isOpen?'他 '+hidden.length+'件を見る ›':'閉じる ›';
+  btn.dataset.open=isOpen?'':'1';
+}
+function openD(cid,rid,skipPush){const r=(R[cid]||[]).find(x=>x.id===rid);if(!r)return;if(!skipPush)history.pushState({type:'route',cid,rid},'','#'+cid+'/'+rid);
+const wide=getSvg(cid,rid,'wide')||fb(280,48);
+const bg=ATMOS_BG[cid]||'';
+const tags=(r.tags||[]).map(t=>{const tg=TAGS[t];return tg?'<span class="rc-label '+tg.cls+'">'+tg.label+'</span>':''}).join('');
+const rc=RC[r.id]||{start:[r.lat,r.lng],end:[r.lat,r.lng],startName:'',endName:''};
+const s=rc.start,e=rc.end,v=rc.via||[];
+const wp=v.length?'&waypoints='+v.map(p=>p[0]+','+p[1]).join('%7C'):'';
+const fullUrl='https://www.google.com/maps/dir/?api=1&origin='+s[0]+','+s[1]+'&destination='+e[0]+','+e[1]+wp+'&travelmode=driving';
+const fromHereUrl='https://www.google.com/maps/dir/?api=1&destination='+s[0]+','+s[1]+'&travelmode=driving';
+let plan='<div class="route-stops">';
+plan+='<div class="route-stop"><div class="route-stop-dot start"></div><div class="route-stop-name"><b>'+(rc.startName||'スタート')+'</b></div></div>';
+v.forEach(function(p,i){plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';plan+='<div class="route-stop"><div class="route-stop-dot via"></div><div class="route-stop-name">経由地点'+(v.length>1?' '+(i+1):'')+'</div></div>'});
+plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';
+plan+='<div class="route-stop"><div class="route-stop-dot end"></div><div class="route-stop-name"><b>'+(rc.endName||'ゴール')+'</b></div></div>';
+plan+='</div>';
+// ── タブ構造でモーダルを構築 ──
+const hasDetail = !!(r.parking || r.best || r.car || (r.spots && r.spots.length));
+const tabBar = hasDetail
+  ? '<div class="mo-tabs"><button class="mo-tab active" onclick="switchTab(this,0)">基本情報</button><button class="mo-tab" onclick="switchTab(this,1)">詳細情報</button></div>'
+  : '';
+
+// 難易度のアクセシブルラベル
+const diffStars = r.diff;
+const diffCount = (diffStars.match(/★/g)||[]).length;
+const diffHtml = '<span aria-label="難易度'+diffCount+'/4" title="難易度: '+diffCount+'/4">'+diffStars+'</span>';
+
+// 危険情報チップ
+const hazardsHtml = (r.hazards && r.hazards.length)
+  ? '<div class="mo-hazards">'+r.hazards.map(h=>'<span class="hazard-chip">'+h+'</span>').join('')+'</div>'
+  : '';
+
+// 燃料代目安
+const distNum = parseFloat(r.dist);
+const fuelHtml = (!isNaN(distNum) && distNum > 0)
+  ? '<tr><th>⛽ 燃料代目安</th><td>'+(Math.round(distNum/15*175))+'〜'+(Math.round(distNum/10*175))+'円</td></tr>'
+  : '';
+
+// 給油警告
+const fuelWarnHtml = r.fuel_warning
+  ? '<div style="margin-bottom:10px;font-size:11px;color:#b26a00;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:8px 10px">⛽ このルートは給油所が少ないです。出発前に満タンを。</div>'
+  : '';
+
+// 基本情報パネル
+const panel0 =
+  hazardsHtml
+  +'<div class="mo-svg-wrap" style="'+bg+'">'+wide+'<div class="mo-svg-labels"><span>'+(rc.startName||'START')+'</span><span>'+(rc.endName||'GOAL')+'</span></div></div>'
+  +'<div class="mo-route-plan">'+plan+'</div>'
+  +'<div class="mo-desc">'+r.desc+'</div>'
+  +'<table class="info-tbl">'
+  +'<tr><th>距離</th><td>'+r.dist+'</td></tr>'
+  +'<tr><th>所要時間</th><td>'+r.time+'</td></tr>'
+  +'<tr><th>難易度</th><td>'+diffHtml+'</td></tr>'
+  +'<tr><th>料金</th><td>'+r.fee+'</td></tr>'
+  +(r.best?'<tr><th>⏰ ベストタイム</th><td style="font-size:12px">'+r.best+'</td></tr>':'')
+  +(r.season?'<tr><th>シーズン</th><td>'+r.season+'</td></tr>':'')
+  +fuelHtml
+  +'</table>'
+  +fuelWarnHtml
+  +'<div class="mo-tip"><div class="mo-tip-h">🏎️ ドライブ好きの本音</div><div class="mo-tip-b">'+r.tip+'</div></div>';
+
+// 詳細情報パネル
+const surfaceMap={'良好':'#e8f5e9,#2e7d32','普通':'#fff8e1,#b26a00','荒れ気味':'#fbe9e7,#bf360c','砂利注意':'#fbe9e7,#bf360c'};
+const surfaceStyle = r.surface ? surfaceMap[r.surface]||'#f5f4f2,#555' : null;
+const surfaceHtml = r.surface
+  ? '<tr><th>🛣 路面</th><td><span style="background:'+surfaceStyle.split(',')[0]+';color:'+surfaceStyle.split(',')[1]+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px">'+r.surface+'</span></td></tr>'
+  : '';
+const driverRows =
+  (r.parking?'<tr><th>🅿️ 駐車場</th><td>'+r.parking+'</td></tr>':'')
+  +(r.best?'<tr><th>⏰ ベスト</th><td>'+r.best+'</td></tr>':'')
+  +(r.car?'<tr><th>🚗 車種</th><td>'+r.car+'</td></tr>':'')
+  +surfaceHtml;
+const driverTbl = driverRows
+  ? '<table class="info-tbl" style="margin-bottom:16px">'+driverRows+'</table>'
+  : '';
+const panel1 = driverTbl + buildSpotsHtml(r.spots);
+
+// 共通CTAフッター（C1: タブ外に1つだけ）
+const ctaHtml = '<div class="cta-group" style="margin-top:20px">'
+  +'<a href="'+fullUrl+'" class="cta cta-primary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>ルート全体をナビ</a>'
+  +'<a href="'+fromHereUrl+'" class="cta cta-secondary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>現在地からスタート地点へ</a>'
+  +'</div>';
+
+document.getElementById('moBody').innerHTML =
+  '<div class="mo-title">'+r.name+'</div>'
+  +'<div class="mo-area">'+r.area+(tags?' · '+tags:'')+'</div>'
+  + tabBar
+  + (hasDetail
+      ? '<div class="mo-tab-panel active" id="tp0">'+panel0+'</div><div class="mo-tab-panel" id="tp1">'+panel1+'</div>'
+      : panel0)
+  + ctaHtml;
+// iOS Safari スクロールロック（position:fixedで確実に止める）
+const scrollY = window.scrollY;
+document.body.style.cssText='overflow:hidden;position:fixed;width:100%;top:-'+scrollY+'px';
+document.getElementById('mo').classList.add('show')}
+function closeMo(){
+  const m=document.getElementById('mo');
+  const sh=m.querySelector('.mo-sheet');
+  const isPC=window.innerWidth>=860;
+  if(isPC){sh.style.transform='scale(0.96)';sh.style.opacity='0';}
+  else{sh.style.transform='translateY(100%)';}
+  setTimeout(()=>{
+    m.classList.remove('show');
+    sh.style.transform='';sh.style.opacity='';
+    // iOS Safari: position:fixed解除時にスクロール位置を復元
+    const scrollY = -parseInt(document.body.style.top||'0');
+    document.body.style.cssText='';
+    window.scrollTo(0,scrollY);
+  },280);
+}
+function goHome(e){if(e)e.preventDefault();cur=null;document.querySelectorAll('.cat-chip').forEach(c=>{c.classList.remove('active');c.style.background='';c.style.borderColor='';});const mb=document.getElementById('moodBanner');mb.classList.remove('show');mb.innerHTML='';document.getElementById('routes').classList.remove('show');document.getElementById('empty').style.display='';const countEl=document.getElementById('routesCount');if(countEl)countEl.textContent='';if(window.innerWidth<860)document.getElementById('hero').scrollIntoView({behavior:'smooth'});if(history.state&&history.state.type)history.pushState({type:'home'},'',location.pathname);}
+window.addEventListener('popstate',function(e){const st=e.state;if(!st||st.type==='home'){const mo=document.getElementById('mo');if(mo&&mo.classList.contains('show')){closeMo();}else{goHome(null);}}else if(st.type==='cat'){if(document.getElementById('mo')?.classList.contains('show'))closeMo();else sel(st.cid);}else if(st.type==='route'){openD(st.cid,st.rid,true);}});
+// ── OSRM ──────────────────────────────────────────────────
+function simplifyCoords(coords, maxPts) {
+  if (coords.length <= maxPts) return coords;
+  const step = (coords.length - 1) / (maxPts - 1);
+  return Array.from({length: maxPts}, (_, i) => coords[Math.round(i * step)]);
+}
+
+// OSRMで道路に沿ったルート形状を取得
+async function fetchOsrmRoute(rid) {
+  if (OSRM_CACHE[rid]) return OSRM_CACHE[rid];
+  const rc = RC[rid]; if (!rc) return null;
+  const pts = [rc.start, ...(rc.via||[]), rc.end];
+  // OSRM: lon,lat 順のセミコロン区切り
+  const coordStr = pts.map(p => p[1]+','+p[0]).join(';');
+  try {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`,
+      {signal: AbortSignal.timeout(6000)}
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes[0]) return null;
+    const raw = data.routes[0].geometry.coordinates; // [[lng,lat],...]
+    const simplified = simplifyCoords(raw, 60);
+    OSRM_CACHE[rid] = simplified;
+    return simplified;
+  } catch(e) { return null; }
+}
+
+// Geoapify Static Map URL生成（道路形状の座標列を使用）
+function buildGeoapifyUrl(rid, coords) {
+  const rc = RC[rid]; if (!rc) return null;
+  const s = rc.start, e = rc.end;
+  const isCirc = s[0]===e[0] && s[1]===e[1];
+  // Geoapifyのpolyline形式: lon,lat|lon,lat|...
+  const line = coords.map(c => c[0].toFixed(5)+','+c[1].toFixed(5)).join('|');
+  return 'https://maps.geoapify.com/v1/staticmap'
+    + '?style=osm-bright-smooth'
+    + '&width=540&height=220&scaleFactor=2'
+    + '&geometry=polyline:' + line
+    + ';linecolor:%233b78d4;linewidth:5;lineopacity:0.95'
+    + '&marker=lonlat:' + s[1]+','+s[0] + ';color:%2334A853;size:small;icontype:awesome'
+    + (isCirc ? '' : ('&marker=lonlat:' + e[1]+','+e[0] + ';color:%23EA4335;size:small;icontype:awesome'))
+    + '&apiKey=' + GEOAPIFY_KEY;
+}
+
+// SVGフォールバック（APIキーなし or 読み込み失敗時）
+function makeFallbackSvg(cid, rid) {
+  const rc = RC[rid]; if (!rc) return '';
+  const W=320,H=110;
+  const pts=[rc.start,...(rc.via||[]),rc.end];
+  const lats=pts.map(p=>p[0]),lngs=pts.map(p=>p[1]);
+  let minLat=Math.min(...lats),maxLat=Math.max(...lats);
+  let minLng=Math.min(...lngs),maxLng=Math.max(...lngs);
+  const mr=0.018;
+  if(maxLat-minLat<mr){const c=(maxLat+minLat)/2;minLat=c-mr/2;maxLat=c+mr/2}
+  if(maxLng-minLng<mr){const c=(maxLng+minLng)/2;minLng=c-mr/2;maxLng=c+mr/2}
+  const lp=(maxLat-minLat)*0.28,lop=(maxLng-minLng)*0.28;
+  const lt=maxLat-minLat+lp*2,lot=maxLng-minLng+lop*2;
+  const tx=lng=>((lng-minLng+lop)/lot)*W;
+  const ty=lat=>H-((lat-minLat+lp)/lt)*H;
+  const pd=pts.map((p,i)=>(i===0?'M':'L')+tx(p[1]).toFixed(1)+' '+ty(p[0]).toFixed(1)).join(' ');
+  const sx=tx(rc.start[1]).toFixed(1),sy=ty(rc.start[0]).toFixed(1);
+  const ex=tx(rc.end[1]).toFixed(1),ey=ty(rc.end[0]).toFixed(1);
+  const cc={sea:['#cce0ef','#a8c8e0'],winding:['#cce0c0','#a8c8a0'],shutoko:['#d8d0e8','#b8b0d0'],circuit:['#e8ccc8','#d0b0a8'],night:['#bcc4d8','#9ca8c0'],mountain:['#c4d8c4','#a0c0a0'],michinoeki:['#ddd4b8','#c0b898']}[cid]||['#d8d8d8','#c0c0c0'];
+  const isCirc=rc.start[0]===rc.end[0]&&rc.start[1]===rc.end[1];
+  const endM=isCirc?`<circle cx="${ex}" cy="${ey}" r="7" fill="none" stroke="#EA4335" stroke-width="2" stroke-dasharray="3,2"/><circle cx="${ex}" cy="${ey}" r="3" fill="#EA4335"/>`:`<circle cx="${ex}" cy="${ey}" r="5" fill="white" opacity="0.95"/><circle cx="${ex}" cy="${ey}" r="3" fill="#EA4335"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${cc[0]}"/><stop offset="100%" stop-color="${cc[1]}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bg_${rid})"/><path d="${pd}" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="${pd}" fill="none" stroke="#3b78d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${sx}" cy="${sy}" r="5" fill="white" opacity="0.95"/><circle cx="${sx}" cy="${sy}" r="3" fill="#34A853"/>${endM}</svg>`;
+}
+
+// サーキット専用SVG（スタート=エンドのルート）
+function makeCircuitSvg(cid, rid) {
+  const W=320, H=136;
+  const cc={sea:['#cce0ef','#a8c8e0'],winding:['#cce0c0','#a8c8a0'],shutoko:['#d8d0e8','#b8b0d0'],circuit:['#e8ccc8','#d0b0a8'],night:['#bcc4d8','#9ca8c0'],mountain:['#c4d8c4','#a0c0a0'],michinoeki:['#ddd4b8','#c0b898'],onsen:['#fdd8d8','#f0b8b8'],flower:['#fdd0ea','#f0b0d8']}[cid]||['#d8d8d8','#c0c0c0'];
+  // オーバル型トラック
+  const cx=W/2, cy=H/2, rx=W*0.34, ry=H*0.32, sw=12;
+  const trackPath=`M ${cx-rx},${cy} a${rx},${ry} 0 1,1 ${rx*2},0 a${rx},${ry} 0 1,1 ${-rx*2},0`;
+  const innerRx=rx-sw, innerRy=ry-sw;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="cbg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${cc[0]}"/><stop offset="100%" stop-color="${cc[1]}"/></linearGradient></defs>
+    <rect width="${W}" height="${H}" fill="url(#cbg_${rid})"/>
+    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="${sw+4}" stroke-linecap="round"/>
+    <path d="${trackPath}" fill="none" stroke="#555" stroke-width="${sw}" stroke-linecap="round"/>
+    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="${sw-3}" stroke-linecap="round" stroke-dasharray="8,6"/>
+    <rect x="${cx-3}" y="${cy-ry+2}" width="6" height="${sw-4}" fill="#f4a300" rx="1"/>
+    <text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="Outfit,sans-serif" font-size="13" font-weight="700" fill="rgba(0,0,0,0.45)">CIRCUIT</text>
+  </svg>`;
+}
+
+function isCircuitRoute(rid) {
+  const rc = RC[rid];
+  return rc && rc.start[0]===rc.end[0] && rc.start[1]===rc.end[1];
+}
+function makeOsrmSvg(cid, rid, coords) {
+  const W = 320, H = 130;
+  const lngs = coords.map(c => c[0]), lats = coords.map(c => c[1]);
+  let minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  let minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const mr = 0.012;
+  if (maxLng - minLng < mr) { const c = (maxLng+minLng)/2; minLng=c-mr/2; maxLng=c+mr/2; }
+  if (maxLat - minLat < mr) { const c = (maxLat+minLat)/2; minLat=c-mr/2; maxLat=c+mr/2; }
+  const pad = 0.22;
+  const dLng = maxLng-minLng, dLat = maxLat-minLat;
+  const pLng = dLng*pad, pLat = dLat*pad;
+  const tx = lng => ((lng - minLng + pLng) / (dLng + pLng*2)) * W;
+  const ty = lat => H - ((lat - minLat + pLat) / (dLat + pLat*2)) * H;
+  const d = coords.map((c,i) => (i===0?'M':'L') + tx(c[0]).toFixed(1)+' '+ty(c[1]).toFixed(1)).join(' ');
+  const rc = RC[rid];
+  const sx = tx(rc.start[1]).toFixed(1), sy = ty(rc.start[0]).toFixed(1);
+  const ex = tx(rc.end[1]).toFixed(1),  ey = ty(rc.end[0]).toFixed(1);
+  const cc = {sea:['#cce0ef','#a8c8e0'],winding:['#cce0c0','#a8c8a0'],shutoko:['#d8d0e8','#b8b0d0'],circuit:['#e8ccc8','#d0b0a8'],night:['#bcc4d8','#9ca8c0'],mountain:['#c4d8c4','#a0c0a0'],michinoeki:['#ddd4b8','#c0b898']}[cid]||['#d8d8d8','#c0c0c0'];
+  const isCirc = rc.start[0]===rc.end[0] && rc.start[1]===rc.end[1];
+  const endM = isCirc
+    ? `<circle cx="${ex}" cy="${ey}" r="7" fill="none" stroke="#EA4335" stroke-width="2" stroke-dasharray="3,2"/><circle cx="${ex}" cy="${ey}" r="3" fill="#EA4335"/>`
+    : `<circle cx="${ex}" cy="${ey}" r="5" fill="white" opacity="0.95"/><circle cx="${ex}" cy="${ey}" r="3" fill="#EA4335"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">`
+    + `<defs><linearGradient id="obg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${cc[0]}"/><stop offset="100%" stop-color="${cc[1]}"/></linearGradient></defs>`
+    + `<rect width="${W}" height="${H}" fill="url(#obg_${rid})"/>`
+    + `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`
+    + `<path d="${d}" fill="none" stroke="#3b78d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`
+    + `<circle cx="${sx}" cy="${sy}" r="5" fill="white" opacity="0.95"/><circle cx="${sx}" cy="${sy}" r="3" fill="#34A853"/>`
+    + endM + `</svg>`;
+}
+
+// ── OSM タイル合成によるリアルマップサムネイル ──────────────
+
+// 緯度/経度 → タイル座標変換
+function lngLatToTile(lng, lat, zoom) {
+  const n = Math.pow(2, zoom);
+  const x = Math.floor((lng + 180) / 360 * n);
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  return { x, y };
+}
+
+// タイル座標 → ピクセル座標（Canvas内）
+function tileToPixel(tileX, tileY, originTileX, originTileY, tileSize) {
+  return {
+    px: (tileX - originTileX) * tileSize,
+    py: (tileY - originTileY) * tileSize
+  };
+}
+
+// 緯度/経度 → Canvas上のピクセル位置
+function lngLatToPixel(lng, lat, zoom, originTileX, originTileY, tileSize) {
+  const n = Math.pow(2, zoom);
+  const px = (lng + 180) / 360 * n * tileSize - originTileX * tileSize;
+  const latRad = lat * Math.PI / 180;
+  const py = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n * tileSize - originTileY * tileSize;
+  return { px, py };
+}
+
+// 最適ズームレベルを計算
+function calcZoom(lats, lngs, W, H) {
+  const pad = 0.25;
+  const dLat = (Math.max(...lats) - Math.min(...lats)) * (1 + pad * 2) || 0.01;
+  const dLng = (Math.max(...lngs) - Math.min(...lngs)) * (1 + pad * 2) || 0.01;
+  for (let z = 14; z >= 6; z--) {
+    const n = Math.pow(2, z);
+    const pxPerDeg = (n * 256) / 360;
+    if (dLng * pxPerDeg <= W && dLat * pxPerDeg * 1.4 <= H) return z;
+  }
+  return 7;
+}
+
+// Canvas にOSMタイル＋ルートを描画
+async function drawTileCanvas(canvas, cid, rid, routeCoords) {
+  const rc = RC[rid]; if (!rc) return;
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const TILE = 256;
+
+  // 座標収集
+  const coords = routeCoords || [rc.start, ...(rc.via||[]), rc.end].map(p => [p[1], p[0]]);
+  const lats = coords.map(c => c[1]), lngs = coords.map(c => c[0]);
+
+  const zoom = calcZoom(lats, lngs, W, H);
+  const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+  const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+
+  // 中心タイル
+  const centerTile = lngLatToTile(centerLng, centerLat, zoom);
+  const tilesX = Math.ceil(W / TILE) + 2;
+  const tilesY = Math.ceil(H / TILE) + 2;
+  const originX = centerTile.x - Math.floor(tilesX / 2);
+  const originY = centerTile.y - Math.floor(tilesY / 2);
+
+  // オフセット調整（中心をCanvasの中央に）
+  const centerPx = lngLatToPixel(centerLng, centerLat, zoom, originX, originY, TILE);
+  const offX = W / 2 - centerPx.px;
+  const offY = H / 2 - centerPx.py;
+
+  // タイル読み込み
+  const tileServers = [
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  ];
+  const tilePromises = [];
+  for (let ty = originY; ty < originY + tilesY + 1; ty++) {
+    for (let tx = originX; tx < originX + tilesX + 1; tx++) {
+      const url = tileServers[((tx + ty) % 3 + 3) % 3]
+        .replace('{z}', zoom).replace('{x}', tx).replace('{y}', ty);
+      tilePromises.push(new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve({ img, dx: (tx - originX) * TILE + offX, dy: (ty - originY) * TILE + offY });
+        img.onerror = () => resolve(null);
+        img.src = url;
+      }));
+    }
+  }
+
+  const tiles = await Promise.all(tilePromises);
+
+  // 背景色（フォールバック）
+  const catBg = {sea:'#d0e8f0',winding:'#d4e8d0',shutoko:'#ddd8ec',circuit:'#ecddd8',night:'#c8cce0',mountain:'#d0e0d0',michinoeki:'#e4dcc8',onsen:'#f0dada',flower:'#f0d8e8'}[cid]||'#e8e6e2';
+  ctx.fillStyle = catBg;
+  ctx.fillRect(0, 0, W, H);
+
+  // タイル描画
+  tiles.forEach(t => {
+    if (!t) return;
+    try { ctx.drawImage(t.img, Math.round(t.dx), Math.round(t.dy), TILE, TILE); } catch(e) {}
+  });
+
+  // ルートラインを描画
+  const routePts = coords.map(c => lngLatToPixel(c[0], c[1], zoom, originX, originY, TILE, offX, offY));
+
+  // offX/offY を考慮した再計算（lngLatToPixelにoffsetを追加）
+  const pts = coords.map(c => {
+    const p = lngLatToPixel(c[0], c[1], zoom, originX, originY, TILE);
+    return { x: p.px + offX, y: p.py + offY };
+  });
+
+  if (pts.length >= 2) {
+    // アウトライン
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.lineWidth = 5.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    // メインライン
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = '#2563EB';
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+  }
+
+  // スタートマーカー（緑）
+  const sp = pts[0];
+  if (sp) {
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#16A34A'; ctx.fill();
+  }
+  // エンドマーカー（赤）
+  const ep = pts[pts.length - 1];
+  if (ep && (ep.x !== sp?.x || ep.y !== sp?.y)) {
+    ctx.beginPath(); ctx.arc(ep.x, ep.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(ep.x, ep.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#DC2626'; ctx.fill();
+  }
+}
+
+// カードマップ生成（Canvas版）
+const THUMB_VER = 'v1';
+function makeCardMap(cid, rid, startLbl, endLbl) {
+  const labelsHtml = `<div class="rc-map-labels"><span>${startLbl}</span><span>${endLbl}</span></div>`;
+
+  // サーキット：専用オーバルSVGを即時表示
+  if (isCircuitRoute(rid)) {
+    return `<div class="rc-map" id="map_${rid}">${makeCircuitSvg(cid, rid)}</div>`;
+  }
+
+  // ① localStorage キャッシュがあれば JPEG img を即時表示（canvas スキップ）
+  let cached = null;
+  try { cached = localStorage.getItem('thumb_' + THUMB_VER + '_' + rid); } catch(e) {}
+  if (cached) {
+    return `<div class="rc-map" id="map_${rid}" style="position:relative"><img src="${cached}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;top:0;left:0">${labelsHtml}</div>`;
+  }
+
+  // ② キャッシュなし：makeFallbackSvg で即時表示（<1ms、ゼロリクエスト）
+  const svgHtml = makeFallbackSvg(cid, rid);
+
+  // ③ Canvas（OSRM+タイル合成）を裏で走らせ、完成後にキャッシュ保存
+  const canvasHtml = `<canvas id="canvas_${rid}" width="320" height="136"
+    style="width:100%;height:100%;display:block;opacity:0;transition:opacity .4s;position:absolute;top:0;left:0"></canvas>`;
+
+  setTimeout(() => _startTileRender(cid, rid), 80);
+
+  return `<div class="rc-map" id="map_${rid}" style="position:relative">${svgHtml}${canvasHtml}${labelsHtml}</div>`;
+}
+
+// タイル描画の実行（OSRM取得→Canvas合成）
+async function _startTileRender(cid, rid) {
+  const canvas = document.getElementById('canvas_' + rid);
+  if (!canvas || canvas.dataset.rendered) return;
+  canvas.dataset.rendered = '1';
+
+  // OSRM でルート形状を取得、失敗したらRC座標で直線近似
+  const coords = await fetchOsrmRoute(rid);
+  const rc = RC[rid];
+  const finalCoords = coords || (rc ? [rc.start, ...(rc.via||[]), rc.end].map(p=>[p[1],p[0]]) : null);
+  if (!finalCoords) return;
+
+  try {
+    await drawTileCanvas(canvas, cid, rid, finalCoords);
+    canvas.style.opacity = '1';
+    // localStorage に JPEG キャッシュ保存（次回以降は即時表示）
+    try {
+      const jpeg = canvas.toDataURL('image/jpeg', 0.7);
+      localStorage.setItem('thumb_' + THUMB_VER + '_' + rid, jpeg);
+    } catch(e) {} // QuotaExceededError や taint は無視
+  } catch(e) {
+    // タイル失敗時はフォールバックSVGを表示
+    const el = document.getElementById('map_' + rid);
+    if (el) el.innerHTML = makeOsrmSvg(cid, rid, finalCoords) + `<div class="rc-map-labels"><span>${RC[rid]?.startName||''}</span><span>${RC[rid]?.endName||''}</span></div>`;
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('mo').classList.contains('show'))closeMo()});
+// ── MAP VIEW ─────────────────────────────────────────────
+const CAT_COLOR={sea:'#2196F3',winding:'#4CAF50',shutoko:'#9C27B0',circuit:'#F44336',night:'#3F51B5',mountain:'#795548',michinoeki:'#FF9800',onsen:'#E91E63',flower:'#E91E63'};
+const CAT_HEX={sea:'#2196F3',winding:'#4CAF50',shutoko:'#9C27B0',circuit:'#F44336',night:'#3F51B5',mountain:'#795548',michinoeki:'#FF9800',onsen:'#F06292',flower:'#E91E63'};
+
+let leafletMap=null, userMarker=null, userLat=null, userLng=null;
+
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function buildAllRoutes(){
+  const all=[];
+  Object.entries(R).forEach(([cid,routes])=>{
+    routes.forEach(r=>{
+      const rc=RC[r.id];
+      if(!rc)return;
+      all.push({cid,r,lat:rc.start[0],lng:rc.start[1]});
+    });
+  });
+  return all;
+}
+
+function renderMapList(routes){
+  const isPC=window.innerWidth>=860;
+  const listId=isPC?'mapList':'mapListM';
+  const el=document.getElementById(listId);
+  if(!el)return;
+  const header=`<div class="map-list-header">${routes[0]?.dist!=null?'現在地から近い順':'全 '+routes.length+' ルート'}</div>`;
+  el.innerHTML=header+routes.map(({cid,r,dist})=>{
+    const cat=CATS.find(c=>c.id===cid);
+    const distStr=dist!=null?(dist<1?Math.round(dist*1000)+'m':dist<100?dist.toFixed(1)+'km':Math.round(dist)+'km'):null;
+    const distClass=dist!=null&&dist>150?'far':'';
+    return `<div class="map-route-row" id="row_${r.id}" onclick="openD('${cid}','${r.id}')">
+      <span class="map-cat-dot" style="background:${CAT_HEX[cid]||'#999'}"></span>
+      <span class="map-route-info">
+        <span class="map-route-name">${r.name}</span>
+        <span class="map-route-sub">${cat?cat.icon+' '+cat.name:''} · ${r.area}</span>
+      </span>
+      ${distStr?`<span class="map-dist-badge ${distClass}">${distStr}</span>`:'<span class="map-dist-no">—</span>'}
+    </div>`;
+  }).join('');
+}
+
+function initMap(){
+  if(leafletMap)return;
+  // PC: show side panel, mobile: show bottom panel
+  const isPC=window.innerWidth>=860;
+  document.getElementById('mapSide').style.display=isPC?'flex':'none';
+  document.getElementById('mapSideMobile').style.display=isPC?'none':'flex';
+
+  leafletMap=L.map('mapLeaflet',{zoomControl:true}).setView([36.2,138.8],7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap contributors',maxZoom:18
+  }).addTo(leafletMap);
+
+  const allRoutes=buildAllRoutes();
+
+  allRoutes.forEach(({cid,r,lat,lng})=>{
+    const color=CAT_HEX[cid]||'#999';
+    const icon=L.divIcon({
+      className:'',
+      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,
+      iconSize:[14,14],iconAnchor:[7,7]
+    });
+    const marker=L.marker([lat,lng],{icon}).addTo(leafletMap);
+    marker.on('click',()=>{
+      openD(cid,r.id);
+      // highlight row
+      document.querySelectorAll('.map-route-row').forEach(el=>el.classList.remove('highlighted'));
+      const row=document.getElementById('row_'+r.id);
+      if(row){row.classList.add('highlighted');row.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    });
+  });
+
+  // 初期リスト（距離なし・カテゴリ順）
+  renderMapList(allRoutes);
+
+  // リサイズ対応
+  setTimeout(()=>leafletMap.invalidateSize(),100);
+}
+
+function locateMe(){
+  const infoId=window.innerWidth>=860?'mapLocInfo':'mapLocInfoM';
+  document.getElementById(infoId).textContent='取得中...';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+    if(userMarker)userMarker.remove();
+    const userIcon=L.divIcon({
+      className:'',
+      html:`<div style="width:16px;height:16px;border-radius:50%;background:#b5312c;border:3px solid #fff;box-shadow:0 0 0 3px rgba(181,49,44,0.3)"></div>`,
+      iconSize:[16,16],iconAnchor:[8,8]
+    });
+    userMarker=L.marker([userLat,userLng],{icon:userIcon,zIndexOffset:1000}).addTo(leafletMap);
+    leafletMap.flyTo([userLat,userLng],9,{duration:1.2});
+
+    // 距離計算して並べ替え
+    const allRoutes=buildAllRoutes().map(item=>({
+      ...item,
+      dist:haversine(userLat,userLng,item.lat,item.lng)
+    })).sort((a,b)=>a.dist-b.dist);
+
+    const nearest=allRoutes[0];
+    document.getElementById(infoId).textContent=
+      `現在地から最寄り: ${nearest.r.name}（${nearest.dist<100?nearest.dist.toFixed(1):Math.round(nearest.dist)}km）`;
+    renderMapList(allRoutes);
+  },()=>{
+    document.getElementById(infoId).textContent='位置情報を取得できませんでした';
+  },{enableHighAccuracy:true,timeout:10000});
+}
+
+let mapVisible=false;
+function toggleMapView(){
+  mapVisible=!mapVisible;
+  const mv=document.getElementById('mapView');
+  const btn=document.getElementById('mapBtn');
+  mv.classList.toggle('show',mapVisible);
+  btn.classList.toggle('active',mapVisible);
+  document.body.style.overflow=mapVisible?'hidden':'';
+  if(mapVisible){
+    // Leaflet は動的ロード
+    if(!window.L){
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      s.onload=initMap;
+      document.head.appendChild(s);
+    } else {
+      initMap();
+      setTimeout(()=>leafletMap&&leafletMap.invalidateSize(),50);
+    }
+  }
+}
+renderCats();
+buildTodayRecs();
+// URLハッシュからの初期状態復元
+(function(){
+  const hash=location.hash.replace('#','');
+  if(!hash)return;
+  const parts=hash.split('/');
+  if(parts.length>=2){sel(parts[0],true);setTimeout(()=>openD(parts[0],parts[1],true),150);}
+  else if(parts[0]){sel(parts[0],true);}
+})();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
+</script>
+</body>
+</html>
