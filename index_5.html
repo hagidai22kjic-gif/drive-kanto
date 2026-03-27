@@ -683,6 +683,31 @@ function sel(id,skipPush){cur=id;_curSort='default';_seasonFilter=false;_favFilt
 const GEOAPIFY_KEY = '';
 const OSRM_CACHE = {};
 
+// OSRM同時リクエスト上限（最大3件）
+let _osrmActive = 0;
+const _OSRM_MAX = 3;
+const _osrmWaiters = [];
+async function _osrmSlot() {
+  if (_osrmActive < _OSRM_MAX) { _osrmActive++; return; }
+  await new Promise(r => _osrmWaiters.push(r));
+  _osrmActive++;
+}
+function _osrmRelease() {
+  _osrmActive--;
+  if (_osrmWaiters.length) _osrmWaiters.shift()();
+}
+
+// サムネイル遅延レンダリング（IntersectionObserver）
+const _thumbObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const rid = e.target.id.replace('map_', '');
+    const cid = e.target.dataset.cid || '';
+    _thumbObserver.unobserve(e.target);
+    _startTileRender(cid, rid);
+  });
+}, { rootMargin: '200px' });
+
 // ナビURL一時保存（onclick内でURLを直接埋め込むと&がHTMLエスケープ問題を起こすため）
 let _navFull = '', _navFromHere = '';
 function navTo(key){ window.location.href = key==='full'?_navFull:_navFromHere; }
@@ -966,19 +991,21 @@ async function fetchOsrmRoute(rid) {
   const pts = [rc.start, ...(rc.via||[]), rc.end];
   // OSRM: lon,lat 順のセミコロン区切り
   const coordStr = pts.map(p => p[1]+','+p[0]).join(';');
+  await _osrmSlot();
   try {
     const res = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`,
       {signal: AbortSignal.timeout(6000)}
     );
-    if (!res.ok) return null;
+    if (!res.ok) { _osrmRelease(); return null; }
     const data = await res.json();
-    if (data.code !== 'Ok' || !data.routes[0]) return null;
+    if (data.code !== 'Ok' || !data.routes[0]) { _osrmRelease(); return null; }
     const raw = data.routes[0].geometry.coordinates; // [[lng,lat],...]
     const simplified = simplifyCoords(raw, 200);
     OSRM_CACHE[rid] = simplified;
+    _osrmRelease();
     return simplified;
-  } catch(e) { return null; }
+  } catch(e) { _osrmRelease(); return null; }
 }
 
 // Geoapify Static Map URL生成（道路形状の座標列を使用）
@@ -1342,9 +1369,13 @@ function makeCardMap(cid, rid, startLbl, endLbl) {
   const canvasHtml = `<canvas id="canvas_${rid}" width="320" height="136"
     style="width:100%;height:100%;display:block;opacity:0;transition:opacity .4s;position:absolute;top:0;left:0"></canvas>`;
 
-  setTimeout(() => _startTileRender(cid, rid), 80);
+  // IntersectionObserver で画面に入った時だけレンダリング開始
+  setTimeout(() => {
+    const el = document.getElementById('map_' + rid);
+    if (el) _thumbObserver.observe(el);
+  }, 0);
 
-  return `<div class="rc-map" id="map_${rid}" style="position:relative">${svgHtml}${canvasHtml}${labelsHtml}</div>`;
+  return `<div class="rc-map" id="map_${rid}" data-cid="${cid}" style="position:relative">${svgHtml}${canvasHtml}${labelsHtml}</div>`;
 }
 
 async function _loadModalMap(cid, rid) {
