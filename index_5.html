@@ -387,6 +387,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 </div>
 <div class="mo" id="mo" onclick="closeMo()"><div class="mo-sheet" onclick="event.stopPropagation()"><div class="mo-handle"></div><button class="mo-close-btn" onclick="closeMo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>閉じる</button><div id="moBody"></div></div></div>
 <script src="route_svgs.js"></script>
+<script src="osrm-preload.js" onerror="window.OSRM_PRELOAD={}"></script>
 <script>
 const CATS=[{id:'sea',icon:'🌊',name:'海辺ドライブ',count:10,tip:'房総フラワーラインは冬〜春が穴場。湘南の夏週末は渋滞必至なので早朝5時スタートが鉄板。'},{id:'winding',icon:'⚡',name:'ワインディング',count:22,tip:'ターンパイクが入門に最適。道幅広め・路面良好・景色抜群の三拍子。いきなり碓氷峠はカーブ184個で心が折れます。'},{id:'shutoko',icon:'🏙',name:'首都高クルーズ',count:6,tip:'同一料金制を活用すれば300円で100km以上走れる。深夜0時以降がベスト。大黒PAは一見の価値あり。'},{id:'circuit',icon:'🏁',name:'サーキット',count:6,tip:'初サーキットはTC1000一択。速度域が低いから安心で、ブレーキングの基本が身につきます。'},{id:'night',icon:'🌙',name:'夜景ドライブ',count:7,tip:'K6川崎線の工場夜景はSF映画の世界。デートなら湘南平→みなとみらいのハシゴが黄金ルート。'},{id:'mountain',icon:'⛰',name:'山岳・高原',count:15,tip:'ビーナスラインは76km全線無料でアルプスの絶景。つまごいパノラマラインは北海道感。富士山スカイラインは五合目まで直登。関東近辺は山岳ルートの宝庫です。'},{id:'michinoeki',icon:'🍙',name:'道の駅巡り',count:7,tip:'川場田園プラザは全国1位の道の駅。ここだけで半日潰せる。道の駅巡りは走行距離じゃなく食べた量が勝敗を分ける。'},{id:'onsen',icon:'♨️',name:'日帰り温泉',count:9,tip:'草津＋四万の群馬ダブル温泉は1日で行ける最強コンボ。那須は距離の割に温泉の密度が高く、コスパ最強。鹿の湯の硫黄臭は洗っても翌日まで残るので覚悟して。'},{id:'flower',icon:'🌸',name:'花・絶景めぐり',count:8,tip:'権現堂の桜×菜の花は3月下旬の平日早朝一択。ネモフィラは4月中旬が見頃で開園30分前から並ぶのが正解。足利フラワーパークの大藤ライトアップはデート最強スポット。'}
 ,{id:'dam',icon:'🏞️',name:'ダム・湖沼ドライブ',count:6,tip:'湖面と山の静かなドライブ。水辺の絶景を走る'}
@@ -987,6 +988,11 @@ function simplifyCoords(coords, maxPts) {
 // OSRMで道路に沿ったルート形状を取得
 async function fetchOsrmRoute(rid) {
   if (OSRM_CACHE[rid]) return OSRM_CACHE[rid];
+  // 事前生成データがあればそちらを使用（ネットワーク不要）
+  if (window.OSRM_PRELOAD && window.OSRM_PRELOAD[rid]) {
+    OSRM_CACHE[rid] = window.OSRM_PRELOAD[rid];
+    return OSRM_CACHE[rid];
+  }
   const rc = RC[rid]; if (!rc) return null;
   const pts = [rc.start, ...(rc.via||[]), rc.end];
   // OSRM: lon,lat 順のセミコロン区切り
@@ -1261,14 +1267,24 @@ async function drawTileCanvas(canvas, cid, rid, routeCoords) {
   const tilePromises = [];
   for (let ty = originY; ty < originY + tilesY + 1; ty++) {
     for (let tx = originX; tx < originX + tilesX + 1; tx++) {
-      const url = tileServers[((tx + ty) % 3 + 3) % 3]
+      const localUrl = `tiles/${zoom}/${tx}/${ty}.png`;
+      const remoteUrl = tileServers[((tx + ty) % 3 + 3) % 3]
         .replace('{z}', zoom).replace('{x}', tx).replace('{y}', ty);
+      const dx = (tx - originX) * TILE + offX;
+      const dy = (ty - originY) * TILE + offY;
       tilePromises.push(new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload = () => resolve({ img, dx: (tx - originX) * TILE + offX, dy: (ty - originY) * TILE + offY });
-        img.onerror = () => resolve(null);
-        img.src = url;
+        img.onload = () => resolve({ img, dx, dy });
+        img.onerror = () => {
+          // ローカルタイルが無い場合はOSMにフォールバック
+          if (img.src.indexOf('tile.openstreetmap.org') === -1) {
+            img.src = remoteUrl;
+          } else {
+            resolve(null);
+          }
+        };
+        img.src = localUrl;
       }));
     }
   }
