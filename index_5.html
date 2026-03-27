@@ -29,8 +29,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 
 /* ── CATEGORY STRIP (sticky horizontal bar) ── */
 .cat-strip{position:sticky;top:52px;z-index:90;background:rgba(244,243,240,0.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-.cat-strip-inner{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-top:10px;padding-bottom:10px}
-.cat-strip-inner::-webkit-scrollbar{display:none}
+.cat-strip-inner{max-width:1200px;margin:0 auto;padding:8px 16px;display:flex;flex-wrap:wrap;gap:6px}
 .cat-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:20px;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);transition:all 0.15s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .cat-chip:active{transform:scale(0.95)}
 .cat-chip .chip-icon{font-size:15px;line-height:1}
