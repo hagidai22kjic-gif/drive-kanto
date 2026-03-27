@@ -2,7 +2,7 @@
   "name": "DRIVE KANTO",
   "short_name": "DriveKanto",
   "description": "関東ドライブルートガイド — 61ルート",
-  "start_url": "/index_5.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f4f3f0",
   "theme_color": "#b5312c",

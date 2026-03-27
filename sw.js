@@ -1,7 +1,7 @@
 const CACHE = 'drive-kanto-v4';
 const OSRM_CACHE = 'drive-kanto-osrm-v1';
 const PRECACHE = [
-  '/index_5.html',
+  '/index.html',
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@500;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
