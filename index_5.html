@@ -787,7 +787,7 @@ const panel0 =
   hazardsHtml
   +(isCirc
   ?'<div class="mo-svg-wrap" style="'+bg+'"><div class="mo-map-badge" style="color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.4)">サーキット</div>'+wide+'<div class="mo-svg-labels" style="background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.75)"><span>🏁 '+( rc.startName||'サーキット')+'</span><span>周回コース</span></div></div>'
-  :'<div class="mo-svg-wrap" style="'+bg+'"><div class="mo-map-badge">ルートイメージ</div>'+wide+'<div class="mo-svg-labels"><span>📍 '+(rc.startName||'スタート')+'</span><span>'+(rc.endName||'ゴール')+' 🏁</span></div></div>')
+  :'')
   +'<div class="mo-route-plan">'+plan+'</div>'
   +'<div class="mo-desc">'+r.desc+'</div>'
   +'<table class="info-tbl">'
@@ -842,7 +842,7 @@ document.getElementById('moBody').innerHTML =
 const scrollY = window.scrollY;
 document.body.style.cssText='overflow:hidden;position:fixed;width:100%;top:-'+scrollY+'px';
 document.getElementById('mo').classList.add('show');
-if(!isCirc && !circImg && !getSvg(cid,rid,'wide')) setTimeout(()=>_loadModalMap(cid,rid),30);}
+}
 function closeMo(){
   const m=document.getElementById('mo');
   const sh=m.querySelector('.mo-sheet');
