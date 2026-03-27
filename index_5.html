@@ -391,7 +391,8 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 <script>
 const CATS=[{id:'sea',icon:'🌊',name:'海辺ドライブ',count:10,tip:'房総フラワーラインは冬〜春が穴場。湘南の夏週末は渋滞必至なので早朝5時スタートが鉄板。'},{id:'winding',icon:'⚡',name:'ワインディング',count:22,tip:'ターンパイクが入門に最適。道幅広め・路面良好・景色抜群の三拍子。いきなり碓氷峠はカーブ184個で心が折れます。'},{id:'shutoko',icon:'🏙',name:'首都高クルーズ',count:6,tip:'同一料金制を活用すれば300円で100km以上走れる。深夜0時以降がベスト。大黒PAは一見の価値あり。'},{id:'circuit',icon:'🏁',name:'サーキット',count:6,tip:'初サーキットはTC1000一択。速度域が低いから安心で、ブレーキングの基本が身につきます。'},{id:'night',icon:'🌙',name:'夜景ドライブ',count:7,tip:'K6川崎線の工場夜景はSF映画の世界。デートなら湘南平→みなとみらいのハシゴが黄金ルート。'},{id:'mountain',icon:'⛰',name:'山岳・高原',count:15,tip:'ビーナスラインは76km全線無料でアルプスの絶景。つまごいパノラマラインは北海道感。富士山スカイラインは五合目まで直登。関東近辺は山岳ルートの宝庫です。'},{id:'michinoeki',icon:'🍙',name:'道の駅巡り',count:7,tip:'川場田園プラザは全国1位の道の駅。ここだけで半日潰せる。道の駅巡りは走行距離じゃなく食べた量が勝敗を分ける。'},{id:'onsen',icon:'♨️',name:'日帰り温泉',count:9,tip:'草津＋四万の群馬ダブル温泉は1日で行ける最強コンボ。那須は距離の割に温泉の密度が高く、コスパ最強。鹿の湯の硫黄臭は洗っても翌日まで残るので覚悟して。'},{id:'flower',icon:'🌸',name:'花・絶景めぐり',count:8,tip:'権現堂の桜×菜の花は3月下旬の平日早朝一択。ネモフィラは4月中旬が見頃で開園30分前から並ぶのが正解。足利フラワーパークの大藤ライトアップはデート最強スポット。'}
 ,{id:'dam',icon:'🏞️',name:'ダム・湖沼ドライブ',count:6,tip:'湖面と山の静かなドライブ。水辺の絶景を走る'}
-,{id:'skyline',icon:'🛣️',name:'絶景スカイライン',count:5,tip:'有料でも走る価値あり。空に近い絶景ワインディング'}];
+,{id:'skyline',icon:'🛣️',name:'絶景スカイライン',count:5,tip:'有料でも走る価値あり。空に近い絶景ワインディング'}
+,{id:'sento',icon:'🛁',name:'銭湯・スパ',count:6,tip:'ドライブの締めくくりは温泉に限る。東京下町の名銭湯から関東最大級のスーパー銭湯まで。走った後の一風呂は格別。'}];
 const TAGS={beginner:{label:'初心者OK',cls:'beginner'},date:{label:'デート向き',cls:'date'},initiald:{label:'頭文字D',cls:'initiald'},onsen:{label:'温泉つき',cls:'onsen'},gourmet:{label:'グルメ',cls:'gourmet'},scenic:{label:'絶景',cls:'scenic'},autumn:{label:'紅葉',cls:'autumn'},nightrec:{label:'夜がベスト',cls:'nightrec'},short:{label:'短距離',cls:'short'},long:{label:'ロング',cls:'long'},jdm:{label:'JDM聖地',cls:'jdm'},touge:{label:'峠走り',cls:'touge'},timeattack:{label:'タイムアタック',cls:'timeattack'},nightmeet:{label:'夜の集まり',cls:'nightmeet'}};
 const R={sea:[
 {id:'sea_01',name:'湘南〜江ノ島',area:'神奈川',dist:'20km',time:'約40分',diff:'★',fee:'無料',season:'通年',parking:'江ノ島周辺に複数あり（有料500〜800円）。江の島岩屋Pが便利',best:'平日早朝〜9時 or 日曜16時以降。夏の土日昼は渋滞2〜3時間',car:'FF含む全車OK。道幅広く初心者向き',desc:'国道134号で相模湾沿いを走る王道ルート。七里ヶ浜からの富士山ビューが格別。',tip:'平日早朝か日曜16時以降が狙い目。七里ヶ浜のPCHはパンケーキが美味い。',tags:['beginner','date'],lat:35.3255,lng:139.4040},
@@ -515,8 +516,16 @@ skyline:[
 {id:'sky_03',name:'日光いろは坂',area:'栃木',dist:'15km',time:'約25分',diff:'★★★',fee:'無料',season:'春〜秋（冬季チェーン規制）',parking:'明智平ロープウェイP',best:'平日早朝',car:'全車種OK',desc:'急勾配の山腹を縫うように走る48のヘアピンカーブを持つ名物峠道。登り専用の第2いろは坂は急勾配と連続ヘアピンが続くテクニカルなルート。頂上・明智平からの中禅寺湖と男体山の絶景は格別。',tip:'紅葉最盛期は渋滞数キロが確実。平日早朝一択。ブレーキを使いすぎないよう注意。',tags:['touge','scenic','autumn']},
 {id:'sky_04',name:'那須甲子道路',area:'栃木',dist:'25km',time:'約40分',diff:'★★',fee:'無料',season:'春〜秋',parking:'スタート付近の駐車場',best:'平日',car:'全車種OK',desc:'那須高原から甲子温泉まで栃木・福島の県境を走る山岳ルート。那須火山帯の荒涼とした景観から深い原生林へと劇的に変化する景色が楽しめる。道中の展望台からは那須連山が一望できる。',tip:'道路幅が狭い箇所あり。対向車に注意。甲子温泉「大黒屋」は野趣あふれる秘湯。',tags:['scenic'],spots:[{name:'甲子温泉 大黒屋',type:'onsen',season:'通年'}]},
 {id:'sky_05',name:'奥日光・金精峠',area:'栃木・群馬',dist:'30km',time:'約50分',diff:'★★★★',fee:'無料',season:'5月〜11月（冬季通行止め）',parking:'金精峠P',best:'平日早朝',car:'スポーツカー向き',desc:'日本有数の難所峠・金精峠を越える栃木〜群馬の山岳ルート。標高1840mを超える峠道は急勾配・急カーブの連続で、栃木側の景観と群馬側の景観が大きく異なる。達成感は最高クラス。',tip:'冬季は完全閉鎖（11月〜4月）。路面凍結が残る5月初旬は注意。峠からの景色は圧巻。',tags:['touge','scenic'],hazards:['steep_grade','narrow_road']}
+],
+sento:[
+{id:'sento_01',name:'隅田川テラス〜大黒湯（押上）',area:'東京',dist:'10km',time:'約25分',diff:'★',fee:'無料（入浴530円〜）',season:'通年',parking:'スカイツリー周辺に有料P多数',best:'夕方〜夜がおすすめ',car:'全車OK',desc:'隅田川テラスを北上しスカイツリーを眺めながら東京下町の名銭湯「大黒湯（押上）」へ。1946年創業の宮造り建築銭湯は現役の名建築。カラン越しに見える富士山のタイル絵が有名。',tip:'大黒湯は月曜定休。入浴530円。近くに「どぜう飯田屋」など下町グルメも揃う。',tags:['short','date'],lat:35.682,lng:139.787},
+{id:'sento_02',name:'多摩川ロング〜天然温泉 平和島',area:'東京',dist:'40km',time:'約1時間20分',diff:'★',fee:'無料（入浴800円〜）',season:'通年',parking:'平和島温泉P（無料・300台）',best:'平日夕方以降',car:'全車OK',desc:'府中の是政橋から多摩川沿いをひたすら下流へ。二子玉川・丸子橋と川の景色を楽しみながら大田区の天然温泉 平和島でフィニッシュ。深夜2時まで営業の大型施設。',tip:'平和島温泉は深夜2時まで営業。遅めのドライブ後に最高。岩盤浴・サウナ・露天風呂完備。',tags:['long'],lat:35.648,lng:139.468},
+{id:'sento_03',name:'横浜港〜RAKU SPA 鶴見',area:'神奈川',dist:'12km',time:'約30分',diff:'★',fee:'無料（入浴1,250円〜）',season:'通年',parking:'RAKU SPA 鶴見P（無料）',best:'夜間',car:'全車OK',desc:'みなとみらいの夜景を眺めながら大黒ふ頭を経由して鶴見のRAKU SPAへ。工場夜景×港の雰囲気を楽しめる夜ドライブルート。サウナ・炭酸泉・岩盤浴完備で深夜1時まで営業。',tip:'大黒ふ頭でひと休みしてから向かうのがベスト。横浜工場夜景も眺められる。',tags:['date','nightrec'],lat:35.456,lng:139.631},
+{id:'sento_04',name:'荒川〜花湯スパリゾート（熊谷）',area:'埼玉',dist:'35km',time:'約1時間',diff:'★',fee:'無料（入浴1,200円〜）',season:'通年',parking:'花湯スパリゾートP（無料・200台）',best:'平日',car:'全車OK',desc:'川越から荒川沿いを北上し熊谷の花湯スパリゾートへ。関東平野の開放感あるドライブの末に到着する大型スパは、露天風呂・岩盤浴・フードコートを完備。',tip:'休日は混むので平日がおすすめ。熊谷は夏の暑さが有名なので夕方以降の訪問がベター。',tags:['long'],lat:35.925,lng:139.485},
+{id:'sento_05',name:'青梅〜スパジアムジャポン（東村山）',area:'東京',dist:'30km',time:'約50分',diff:'★',fee:'無料（入浴1,430円〜）',season:'通年',parking:'スパジアムジャポンP（無料・1,000台）',best:'平日',car:'全車OK',desc:'奥多摩の玄関口・青梅から玉川上水沿いを東進して東村山のスパジアムジャポンへ。緑の多い西東京を横断する爽快ルート。施設は15種類以上の浴槽を持つ関東最大級のスーパー銭湯。',tip:'スパジアムジャポンは1,000台分の駐車場あり。平日は比較的空いていてゆっくりできる。',tags:['beginner'],lat:35.788,lng:139.276},
+{id:'sento_06',name:'鎌倉・江ノ島〜湯乃市 藤沢',area:'神奈川',dist:'20km',time:'約40分',diff:'★',fee:'無料（入浴750円〜）',season:'通年',parking:'湯乃市藤沢P（無料・150台）',best:'夕方以降',car:'全車OK',desc:'鎌倉観光の後、134号線で江ノ島を経由して藤沢の湯乃市へ。夕日の江ノ島を眺めてから潮風と砂を落とす湘南ドライブの完璧な締めくくりコース。',tip:'夕日が沈む江ノ島を見てから温泉へ。タイミングよければ富士山シルエットも拝める。',tags:['date','scenic'],lat:35.319,lng:139.549}
 ]};
-const ATMOS_BG={sea:'background:linear-gradient(135deg,#e8f4f8,#d0e8f0)',winding:'background:linear-gradient(135deg,#e8f0e6,#cee0c8)',shutoko:'background:linear-gradient(135deg,#eae6f0,#d5cee5)',circuit:'background:linear-gradient(135deg,#f5e8e6,#e8d5d2)',night:'background:linear-gradient(135deg,#dde0ec,#c5c8dc)',mountain:'background:linear-gradient(135deg,#e0ece0,#c8dcc5)',michinoeki:'background:linear-gradient(135deg,#f0ebe0,#e0d8c8)',onsen:'background:linear-gradient(135deg,#fde8e8,#fce0e0)',flower:'background:linear-gradient(135deg,#fce4f0,#fdf0f8)',dam:'background:linear-gradient(135deg,#1a3040,#0e2030)',skyline:'background:linear-gradient(135deg,#1a1a3a,#2a1040)'};
+const ATMOS_BG={sea:'background:linear-gradient(135deg,#e8f4f8,#d0e8f0)',winding:'background:linear-gradient(135deg,#e8f0e6,#cee0c8)',shutoko:'background:linear-gradient(135deg,#eae6f0,#d5cee5)',circuit:'background:linear-gradient(135deg,#f5e8e6,#e8d5d2)',night:'background:linear-gradient(135deg,#dde0ec,#c5c8dc)',mountain:'background:linear-gradient(135deg,#e0ece0,#c8dcc5)',michinoeki:'background:linear-gradient(135deg,#f0ebe0,#e0d8c8)',onsen:'background:linear-gradient(135deg,#fde8e8,#fce0e0)',flower:'background:linear-gradient(135deg,#fce4f0,#fdf0f8)',dam:'background:linear-gradient(135deg,#1a3040,#0e2030)',skyline:'background:linear-gradient(135deg,#1a1a3a,#2a1040)',sento:'background:linear-gradient(135deg,#e8f0f8,#d0e0f0)'};
 // ムードバナー用の濃いグラデーション（雰囲気重視）
 const MOOD_GRAD={
   sea:'linear-gradient(135deg,#0a3d5c 0%,#1a6b8a 60%,#0d4f6e 100%)',
@@ -530,6 +539,7 @@ const MOOD_GRAD={
   flower:'linear-gradient(135deg,#2a0a1e 0%,#4a1a3a 60%,#6a2a5a 100%)',
   dam:'linear-gradient(135deg,rgba(26,48,64,0.85),rgba(14,32,48,0.85))',
   skyline:'linear-gradient(135deg,rgba(26,26,58,0.85),rgba(42,16,64,0.85))',
+  sento:'linear-gradient(135deg,#0a2a3a 0%,#1a4a6a 60%,#0d3a5a 100%)',
 };
 let cur=null;
 function getSvg(c,r,t){if(typeof ROUTE_SVGS==='undefined')return '';const d=ROUTE_SVGS[c];if(!d)return '';const s=d.find(x=>x.id===r);if(!s)return '';return t==='thumb'?s.thumb_svg:s.wide_svg}
@@ -814,7 +824,13 @@ const RC={
 "sky_02":{start:[35.2100,139.0400],end:[35.1900,139.0100],via:[[35.2000,139.0200]],startName:'芦ノ湖畔',endName:'三国峠'},
 "sky_03":{start:[36.7275,139.6050],end:[36.7750,139.5481],via:[[36.7500,139.5700]],startName:'馬返し',endName:'明智平'},
 "sky_04":{start:[37.0000,140.0500],end:[37.1000,139.9800],via:[[37.0500,140.0200]],startName:'那須高原',endName:'甲子温泉'},
-"sky_05":{start:[36.7750,139.5481],end:[36.8600,139.4200],via:[[36.8200,139.4800]],startName:'湯元',endName:'金精峠'}
+"sky_05":{start:[36.7750,139.5481],end:[36.8600,139.4200],via:[[36.8200,139.4800]],startName:'湯元',endName:'金精峠'},
+"sento_01":{start:[35.682,139.787],end:[35.710,139.814],via:[[35.695,139.795]],startName:'浜町橋',endName:'大黒湯（押上）'},
+"sento_02":{start:[35.648,139.468],end:[35.572,139.744],via:[[35.598,139.600]],startName:'是政橋（府中）',endName:'天然温泉 平和島'},
+"sento_03":{start:[35.456,139.631],end:[35.509,139.678],via:[[35.469,139.655]],startName:'みなとみらい',endName:'RAKU SPA 鶴見'},
+"sento_04":{start:[35.925,139.485],end:[36.186,139.386],via:[[36.050,139.430]],startName:'川越',endName:'花湯スパリゾート（熊谷）'},
+"sento_05":{start:[35.788,139.276],end:[35.758,139.475],via:[[35.772,139.378]],startName:'青梅',endName:'スパジアムジャポン（東村山）'},
+"sento_06":{start:[35.319,139.549],end:[35.360,139.469],via:[[35.310,139.500]],startName:'鎌倉',endName:'湯乃市 藤沢'}
 };
 const STYPE_LABEL={hana:'花',koyo:'紅葉',onsen:'温泉',view:'展望',gourmet:'グルメ',rekishi:'史跡'};
 const STYPE_ICON={hana:'🌸',koyo:'🍁',onsen:'♨️',view:'🗻',gourmet:'🍜',rekishi:'🏯'};
@@ -1292,7 +1308,7 @@ async function drawTileCanvas(canvas, cid, rid, routeCoords) {
   const tiles = await Promise.all(tilePromises);
 
   // 背景色（フォールバック）
-  const catBg = {sea:'#d0e8f0',winding:'#d4e8d0',shutoko:'#ddd8ec',circuit:'#ecddd8',night:'#c8cce0',mountain:'#d0e0d0',michinoeki:'#e4dcc8',onsen:'#f0dada',flower:'#f0d8e8'}[cid]||'#e8e6e2';
+  const catBg = {sea:'#d0e8f0',winding:'#d4e8d0',shutoko:'#ddd8ec',circuit:'#ecddd8',night:'#c8cce0',mountain:'#d0e0d0',michinoeki:'#e4dcc8',onsen:'#f0dada',flower:'#f0d8e8',sento:'#d0e4f4'}[cid]||'#e8e6e2';
   ctx.fillStyle = catBg;
   ctx.fillRect(0, 0, W, H);
 
