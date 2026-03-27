@@ -1,4 +1,4 @@
-const CACHE = 'drive-kanto-v2';
+const CACHE = 'drive-kanto-v4';
 const OSRM_CACHE = 'drive-kanto-osrm-v1';
 const PRECACHE = [
   '/index_5.html',
