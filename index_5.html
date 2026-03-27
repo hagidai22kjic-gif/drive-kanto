@@ -254,6 +254,30 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 }
 
 /* ════════════════════════════════════════
+   TABLET LAYOUT  (≥ 768px, iPad portrait+)
+   ════════════════════════════════════════ */
+@media(min-width:768px){
+  /* モーダル: iPad でも中央ダイアログ表示 */
+  .mo{align-items:center;padding:20px}
+  .mo-sheet{border-radius:14px;max-width:640px;max-height:88vh;transform:scale(0.94) translateY(10px);transition:transform 0.28s cubic-bezier(0.32,0.72,0,1),opacity 0.28s;opacity:0;padding:0 28px 28px}
+  .mo.show .mo-sheet{transform:scale(1) translateY(0);opacity:1}
+  .mo-handle{display:none}
+  .mo-close-btn{display:flex;align-items:center;justify-content:flex-end;padding:18px 0 4px;cursor:pointer;background:none;border:none;color:var(--text-hint);font-size:12px;font-family:'Noto Sans JP',sans-serif;gap:4px;margin-left:auto}
+  .mo-close-btn svg{width:14px;height:14px}
+  .mo-tabs{margin:0 -28px 18px;padding:0 28px}
+  .cta-group{flex-direction:row}
+  .cta{font-size:14px;padding:13px 18px}
+  /* レイアウト余白を拡大 */
+  .header-inner{padding:11px 28px}
+  .page{padding:0 28px;padding-top:20px;padding-bottom:48px}
+  .cat-strip-inner{padding-left:28px;padding-right:28px}
+  .cat-chip{padding:8px 14px}
+  /* タッチターゲット強化 */
+  .sort-btn{padding:6px 14px;font-size:12px}
+  .mo-tab{font-size:13px;padding:12px 0}
+}
+
+/* ════════════════════════════════════════
    PC LAYOUT  (≥ 860px)
    ════════════════════════════════════════ */
 @media(min-width:860px){
@@ -914,7 +938,7 @@ document.getElementById('mo').classList.add('show');
 function closeMo(){
   const m=document.getElementById('mo');
   const sh=m.querySelector('.mo-sheet');
-  const isPC=window.innerWidth>=860;
+  const isPC=window.innerWidth>=768;
   if(isPC){sh.style.transform='scale(0.96)';sh.style.opacity='0';}
   else{sh.style.transform='translateY(100%)';}
   setTimeout(()=>{
