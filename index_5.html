@@ -199,6 +199,23 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 .stype.hana{background:#fce4ec;color:#c62828}.stype.koyo{background:#fbe9e7;color:#bf360c}
 .stype.onsen{background:#e3f2fd;color:#1565c0}.stype.view{background:#ede7f6;color:#4527a0}
 .stype.gourmet{background:#fff8e1;color:#b26a00}.stype.rekishi{background:#f3e5f5;color:#6a1b9a}
+
+/* ── 周辺施設 ── */
+.fac-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.fac-hd{font-size:11px;font-weight:700;color:var(--text-hint);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.fac-loading{font-size:12px;color:var(--text-hint);padding:10px 0;display:flex;align-items:center;gap:6px}
+.fac-loading::before{content:'';display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fac-group{margin-bottom:12px}
+.fac-group-lbl{font-size:11px;font-weight:700;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.fac-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#f7f5f2;border-radius:8px;margin-bottom:3px;text-decoration:none;color:var(--text);-webkit-tap-highlight-color:transparent;transition:background .12s}
+.fac-item:active{background:#edeae4}
+.fac-name{font-size:12px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px}
+.fac-dist{font-size:10px;color:var(--text-hint);font-family:'Outfit',sans-serif;white-space:nowrap;flex-shrink:0}
+.fac-note{font-size:10px;color:var(--text-hint);line-height:1.6;margin-top:6px}
+.fac-empty{font-size:12px;color:var(--text-hint);padding:8px 0}
+.fac-gmaps{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;padding:2px 0;flex-shrink:0;margin-left:6px}
+.fac-gmaps:active{opacity:.7}
 .spot-season{font-size:9px;color:var(--text-hint);white-space:nowrap}
 .spots-hidden{display:none}
 .spots-toggle{font-size:11px;color:var(--text-hint);background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;margin-top:2px}
@@ -804,9 +821,9 @@ if(isCirc){
 }
 plan+='</div>';
 // ── タブ構造でモーダルを構築 ──
-const hasDetail = !!(r.parking || r.best || r.car || (r.spots && r.spots.length));
+const hasDetail = true; // 周辺施設タブを常に表示
 const tabBar = hasDetail
-  ? '<div class="mo-tabs"><button class="mo-tab active" onclick="switchTab(this,0)">基本情報</button><button class="mo-tab" onclick="switchTab(this,1)">詳細情報</button></div>'
+  ? '<div class="mo-tabs"><button class="mo-tab active" onclick="switchTab(this,0)">基本情報</button><button class="mo-tab" onclick="switchTab(this,1)">駐車・施設</button></div>'
   : '';
 
 // 難易度のアクセシブルラベル
@@ -864,7 +881,8 @@ const driverRows =
 const driverTbl = driverRows
   ? '<table class="info-tbl" style="margin-bottom:16px">'+driverRows+'</table>'
   : '';
-const panel1 = driverTbl + buildSpotsHtml(r.spots);
+const facPlaceholder = '<div id="fac_'+rid+'" class="fac-section"><div class="fac-hd">📍 周辺施設（スタート地点から5km圏内）</div><div class="fac-loading">検索中...</div></div>';
+const panel1 = driverTbl + buildSpotsHtml(r.spots) + facPlaceholder;
 
 // 共通CTAフッター（サーキットはスポット表示、通常はナビ）
 const spotUrl='https://www.google.com/maps/search/?api=1&query='+s[0]+','+s[1];
@@ -886,6 +904,8 @@ document.getElementById('moBody').innerHTML =
       ? '<div class="mo-tab-panel active" id="tp0">'+panel0+'</div><div class="mo-tab-panel" id="tp1">'+panel1+'</div>'
       : panel0)
   + ctaHtml;
+// 周辺施設を非同期ロード
+setTimeout(() => loadFacilities(s[0], s[1], rid), 100);
 // iOS Safari スクロールロック（position:fixedで確実に止める）
 const scrollY = window.scrollY;
 document.body.style.cssText='overflow:hidden;position:fixed;width:100%;top:-'+scrollY+'px';
@@ -1015,6 +1035,69 @@ function getFavs(){try{return JSON.parse(localStorage.getItem(FAV_KEY)||'[]')}ca
 function isFav(rid){return getFavs().includes(rid)}
 function toggleFav(rid){const favs=getFavs();const idx=favs.indexOf(rid);if(idx>=0)favs.splice(idx,1);else favs.push(rid);try{localStorage.setItem(FAV_KEY,JSON.stringify(favs))}catch(e){}document.querySelectorAll('.fav-btn[data-rid="'+rid+'"]').forEach(btn=>{const on=favs.includes(rid);btn.classList.toggle('active',on);btn.textContent=on?'♥':'♡'});if(_favFilter){const c=document.querySelector('.cat-btn.active')?.dataset?.id||cur;applySortFilter(c,_curSort)}}
 function toggleFavFilter(cid){_favFilter=!_favFilter;document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid))}
+
+// ── 周辺施設（Overpass API, 無料） ──
+async function loadFacilities(lat, lng, rid) {
+  const el = document.getElementById('fac_' + rid);
+  if (!el) return;
+  const r = 5000; // 5km
+  const q = `[out:json][timeout:15];(
+    node["amenity"="fuel"](around:${r},${lat},${lng});
+    node["shop"="convenience"](around:${r},${lat},${lng});
+    node["highway"="rest_area"](around:${r},${lat},${lng});
+    node["leisure"="park"](around:${r},${lat},${lng});
+    way["leisure"="park"](around:${r},${lat},${lng});
+  );out center 30;`;
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: 'data=' + encodeURIComponent(q)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const items = json.elements || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="fac-hd">📍 周辺施設（スタート地点から5km圏内）</div><div class="fac-empty">施設情報が見つかりませんでした</div>';
+      return;
+    }
+    // カテゴリ分類
+    const groups = {fuel:[], conv:[], rest:[], park:[]};
+    items.forEach(n => {
+      const nlat = n.lat ?? n.center?.lat;
+      const nlng = n.lon ?? n.center?.lon;
+      const name = n.tags?.name || n.tags?.['name:ja'] || '名称不明';
+      const dist = nlat && nlng ? Math.round(Math.sqrt((nlat-lat)**2+(nlng-lng)**2)*111000) : null;
+      const gmaps = nlat && nlng ? 'https://www.google.com/maps/search/?api=1&query='+nlat+','+nlng : null;
+      const item = {name, dist, gmaps};
+      if (n.tags?.amenity === 'fuel') groups.fuel.push(item);
+      else if (n.tags?.shop === 'convenience') groups.conv.push(item);
+      else if (n.tags?.highway === 'rest_area') groups.rest.push(item);
+      else if (n.tags?.leisure === 'park') groups.park.push(item);
+    });
+    // 距離順ソート、各カテゴリ最大3件
+    const sortSlice = arr => arr.filter(i=>i.dist!==null).sort((a,b)=>a.dist-b.dist).slice(0,3);
+    const renderGroup = (icon, label, arr) => {
+      const s = sortSlice(arr);
+      if (!s.length) return '';
+      return '<div class="fac-group"><div class="fac-group-lbl">'+icon+' '+label+'</div>'
+        + s.map(i=>'<div class="fac-item"><span class="fac-name">'+i.name+'</span>'
+          +(i.dist?'<span class="fac-dist">約'+( i.dist>=1000?(i.dist/1000).toFixed(1)+'km':i.dist+'m')+'</span>':'')
+          +(i.gmaps?'<a class="fac-gmaps" href="'+i.gmaps+'" target="_blank" rel="noopener">地図</a>':'')
+          +'</div>').join('')
+        +'</div>';
+    };
+    const note = '<div class="fac-note" style="margin-top:8px">※ OpenStreetMapのデータを使用。情報が古い場合があります。</div>';
+    const body = renderGroup('⛽','ガソリンスタンド',groups.fuel)
+      + renderGroup('🏪','コンビニ',groups.conv)
+      + renderGroup('🛣️','道の駅・PA',groups.rest)
+      + renderGroup('🌳','公園・駐車スペース',groups.park)
+      + note;
+    el.innerHTML = '<div class="fac-hd">📍 周辺施設（スタート地点から5km圏内）</div>' + (body || '<div class="fac-empty">施設情報が見つかりませんでした</div>');
+  } catch(e) {
+    console.warn('Overpass error:', e);
+    if (el) el.innerHTML = '<div class="fac-hd">📍 周辺施設</div><div class="fac-empty">施設情報を取得できませんでした</div>';
+  }
+}
 function isCircuitRoute(rid) {
   const rc = RC[rid];
   return rc && rc.start[0]===rc.end[0] && rc.start[1]===rc.end[1];
