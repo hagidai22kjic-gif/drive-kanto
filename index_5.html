@@ -146,6 +146,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 .rc-label.nightrec{background:#ede7f6;color:#4527a0}
 .rc-label.short{background:#f3e5f5;color:#6a1b9a}
 .rc-label.long{background:#e8eaf6;color:#283593}
+.sort-loc-row{display:flex;align-items:center;gap:8px;padding:5px 2px 2px;font-size:11px}
+.sort-loc-label{color:var(--accent);font-weight:600}
+.sort-loc-reset{font-size:10px;color:var(--text-hint);background:none;border:1px solid var(--border);border-radius:10px;padding:2px 8px;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+.sort-loc-reset:hover{background:var(--border)}
 .fav-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;color:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px);z-index:2}
 .fav-btn.active{color:#ff4d6d;background:rgba(255,77,109,0.2)}
 .fav-btn:hover{transform:scale(1.15)}
@@ -596,16 +600,43 @@ function sortRoutes(routes, mode){
   return routes;
 }
 function renderSortBar(cid){
+  const hasLoc=!!(window._userLat);
+  const nearBtn=hasLoc
+    ?'<button class="sort-btn sort-btn-near'+(_curSort==='near'?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'near\')">📍 近い順</button>'
+    :'<button class="sort-btn sort-btn-near" onclick="requestNearSort(\''+cid+'\')">📍 近い順</button>';
+  const locRow=hasLoc
+    ?'<div class="sort-loc-row"><span class="sort-loc-label">📍 現在地設定済み</span><button class="sort-loc-reset" onclick="clearUserLoc(\''+cid+'\')">再設定</button></div>'
+    :'';
   return '<div class="sort-bar" id="sortBar">'
     +'<button class="sort-btn'+((_curSort==='default')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'default\')">デフォルト</button>'
     +'<button class="sort-btn'+((_curSort==='diff')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'diff\')">難易度↑</button>'
     +'<button class="sort-btn'+((_curSort==='dist')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'dist\')">距離↑</button>'
-    +'<button class="sort-btn'+((_curSort==='near')?' active':'')+'" onclick="applySortFilter(\''+cid+'\',\'near\')">近い順</button>'
+    +nearBtn
     +'<button class="sort-btn'+(_seasonFilter?' season-on':'')+'" onclick="toggleSeasonFilter(\''+cid+'\')">✅ 今走れる</button>'
     +'<button class="sort-btn'+((_favFilter)?' sort-btn-fav-active':'')+'" onclick="toggleFavFilter(\''+cid+'\')">❤️ お気に入り</button>'
-    +'</div>';
+    +'</div>'+locRow;
 }
 function applySortFilter(cid, mode){_curSort=mode;document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid));}
+function requestNearSort(cid){
+  if(!navigator.geolocation){alert('お使いのブラウザは位置情報に対応していません');return;}
+  const nearBtns=document.querySelectorAll('.sort-btn-near');
+  nearBtns.forEach(b=>{b.textContent='📍 取得中…';b.disabled=true;});
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      window._userLat=pos.coords.latitude;
+      window._userLng=pos.coords.longitude;
+      _curSort='near';
+      document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);
+      document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid));
+    },
+    ()=>{
+      nearBtns.forEach(b=>{b.textContent='📍 近い順';b.disabled=false;});
+      alert('現在地を取得できませんでした。\nブラウザの位置情報を許可してください。');
+    },
+    {timeout:10000,maximumAge:60000}
+  );
+}
+function clearUserLoc(cid){window._userLat=null;window._userLng=null;if(_curSort==='near')_curSort='default';document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid));}
 function sel(id,skipPush){cur=id;_curSort='default';_seasonFilter=false;_favFilter=false;if(!skipPush)history.pushState({type:'cat',cid:id},'','#'+id);document.getElementById('empty').style.display='none';updateMoodBanner(id);const sec=document.getElementById('routes');sec.classList.add('show');document.getElementById('sort-bar-container').innerHTML=renderSortBar(id);document.getElementById('list').innerHTML=buildCardList(id,getFilteredSortedRoutes(id));setTimeout(()=>{if(window.innerWidth<860)sec.scrollIntoView({behavior:'smooth',block:'start'})},80)}
 
 const GEOAPIFY_KEY = '';
