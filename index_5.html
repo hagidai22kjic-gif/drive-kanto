@@ -158,9 +158,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
 .mo-close-btn{display:none}
 .mo-title{font-size:18px;font-weight:700;line-height:1.35;margin-bottom:3px}
 .mo-area{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
-.mo-svg-wrap{border-radius:8px;margin-bottom:14px;overflow:hidden}
+.mo-svg-wrap{border-radius:8px;margin-bottom:14px;overflow:hidden;position:relative}
 .mo-svg-wrap svg{width:100%;height:85px;display:block}
-.mo-svg-labels{display:flex;justify-content:space-between;margin-top:4px;font-family:'Outfit',sans-serif;font-size:9px;color:rgba(0,0,0,0.3);font-weight:500}
+.mo-map-badge{position:absolute;top:7px;right:8px;font-size:9px;color:rgba(0,0,0,0.5);background:rgba(255,255,255,0.65);padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:0.03em;pointer-events:none;font-family:'Noto Sans JP',sans-serif}
+.mo-svg-labels{display:flex;justify-content:space-between;padding:5px 10px;background:rgba(255,255,255,0.5);font-family:'Noto Sans JP',sans-serif;font-size:10px;color:rgba(0,0,0,0.6);font-weight:600;gap:8px}
 .mo-desc{font-size:13px;line-height:1.85;color:var(--text-sub);margin-bottom:14px}
 
 /* Info table */
@@ -332,6 +333,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.95);backd
           </div>
           <button class="routes-back" onclick="goHome(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>カテゴリ一覧</button>
         </div>
+        <div id="sort-bar-container"></div>
         <div id="list"></div>
       </section>
 </div>
@@ -514,7 +516,7 @@ let _curSort='default';
 let _seasonFilter=false;
 function isRouteClosed(r){return r.season&&r.season!=='通年'&&getSeasonBadge(r.season).includes('closed');}
 function getFilteredSortedRoutes(cid){const rts=_seasonFilter?(R[cid]||[]).filter(r=>!isRouteClosed(r)):(R[cid]||[]);return sortRoutes(rts,_curSort);}
-function toggleSeasonFilter(cid){_seasonFilter=!_seasonFilter;document.getElementById('list').innerHTML=renderSortBar(cid)+buildCardList(cid,getFilteredSortedRoutes(cid));}
+function toggleSeasonFilter(cid){_seasonFilter=!_seasonFilter;document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid));}
 function getCarBadge(carStr){if(!carStr)return '';const badges=[];if(/FR|MR/i.test(carStr))badges.push('FR向き');else if(/AWD|4WD|4駆/i.test(carStr))badges.push('AWD向き');if(badges.length===0)return '';return '<div class="rc-car-wrap">'+badges.map(b=>'<span class="rc-carbadge">'+b+'</span>').join('')+'</div>';}
 function getSeasonBadge(seasonStr){if(!seasonStr||seasonStr==='通年')return '';const mo=new Date().getMonth()+1;const openRanges={春:[[3,5]],夏:[[6,8]],秋:[[9,11]],冬:[[12,2]],'春〜秋':[[3,11]],'4月下旬〜11月':[[4,11]],'1〜4月':[[1,4]],'紅葉（10月）':[[10,10]]};let closed=false;const s=seasonStr;if(/冬季閉鎖|冬期閉鎖/.test(s)&&(mo<=3||mo>=11)){closed=true;}else if(/4月下旬〜11月/.test(s)&&(mo<=3||mo>=12)){closed=true;}else if(/春〜秋/.test(s)&&(mo>=12||mo<=2)){closed=true;}else if(/1〜4月/.test(s)&&(mo>=5&&mo<=11)){closed=true;}else if(/紅葉（10月）/.test(s)&&(mo<9||mo>11)){return '<span class="rc-season-badge check">🍂 紅葉シーズン外</span>';}return closed?'<span class="rc-season-badge closed">❄️ 現在休止中</span>':'';}
 function getBestBadge(bestStr){if(!bestStr)return '';if(/深夜|夜/.test(bestStr))return '<div class="rc-best-badge">深夜推奨</div>';if(/早朝/.test(bestStr))return '<div class="rc-best-badge">早朝推奨</div>';if(/平日/.test(bestStr))return '<div class="rc-best-badge">平日推奨</div>';return '';}
@@ -550,8 +552,8 @@ function renderSortBar(cid){
     +'<button class="sort-btn'+(_seasonFilter?' season-on':'')+'" onclick="toggleSeasonFilter(\''+cid+'\')">✅ 今走れる</button>'
     +'</div>';
 }
-function applySortFilter(cid, mode){_curSort=mode;document.getElementById('list').innerHTML=renderSortBar(cid)+buildCardList(cid,getFilteredSortedRoutes(cid));}
-function sel(id,skipPush){cur=id;_curSort='default';_seasonFilter=false;if(!skipPush)history.pushState({type:'cat',cid:id},'','#'+id);document.getElementById('empty').style.display='none';updateMoodBanner(id);const sec=document.getElementById('routes');sec.classList.add('show');document.getElementById('list').innerHTML=renderSortBar(id)+buildCardList(id,getFilteredSortedRoutes(id));setTimeout(()=>{if(window.innerWidth<860)sec.scrollIntoView({behavior:'smooth',block:'start'})},80)}
+function applySortFilter(cid, mode){_curSort=mode;document.getElementById('sort-bar-container').innerHTML=renderSortBar(cid);document.getElementById('list').innerHTML=buildCardList(cid,getFilteredSortedRoutes(cid));}
+function sel(id,skipPush){cur=id;_curSort='default';_seasonFilter=false;if(!skipPush)history.pushState({type:'cat',cid:id},'','#'+id);document.getElementById('empty').style.display='none';updateMoodBanner(id);const sec=document.getElementById('routes');sec.classList.add('show');document.getElementById('sort-bar-container').innerHTML=renderSortBar(id);document.getElementById('list').innerHTML=buildCardList(id,getFilteredSortedRoutes(id));setTimeout(()=>{if(window.innerWidth<860)sec.scrollIntoView({behavior:'smooth',block:'start'})},80)}
 
 const GEOAPIFY_KEY = '';
 const OSRM_CACHE = {};
@@ -657,8 +659,10 @@ function toggleSpots(btn){
   btn.dataset.open=isOpen?'':'1';
 }
 function openD(cid,rid,skipPush){const r=(R[cid]||[]).find(x=>x.id===rid);if(!r)return;if(!skipPush)history.pushState({type:'route',cid,rid},'','#'+cid+'/'+rid);
-const wide=getSvg(cid,rid,'wide')||fb(280,48);
-const bg=ATMOS_BG[cid]||'';
+const isCirc=isCircuitRoute(r.id);
+const circImg=isCirc?CIRCUIT_IMGS[r.id]:null;
+const wide=circImg?'<img src="'+circImg+'" alt="" style="width:100%;height:85px;object-fit:cover;display:block">':isCirc?makeCircuitSvg(cid,rid):(getSvg(cid,rid,'wide')||fb(280,48));
+const bg=circImg?'':(isCirc?'background:linear-gradient(135deg,#1e1e22,#2d2d35)':(ATMOS_BG[cid]||''));
 const tags=(r.tags||[]).map(t=>{const tg=TAGS[t];return tg?'<span class="rc-label '+tg.cls+'">'+tg.label+'</span>':''}).join('');
 const rc=RC[r.id]||{start:[r.lat,r.lng],end:[r.lat,r.lng],startName:'',endName:''};
 const s=rc.start,e=rc.end,v=rc.via||[];
@@ -666,10 +670,14 @@ const wp=v.length?'&waypoints='+v.map(p=>p[0]+','+p[1]).join('%7C'):'';
 const fullUrl='https://www.google.com/maps/dir/?api=1&origin='+s[0]+','+s[1]+'&destination='+e[0]+','+e[1]+wp+'&travelmode=driving';
 const fromHereUrl='https://www.google.com/maps/dir/?api=1&destination='+s[0]+','+s[1]+'&travelmode=driving';
 let plan='<div class="route-stops">';
-plan+='<div class="route-stop"><div class="route-stop-dot start"></div><div class="route-stop-name"><b>'+(rc.startName||'スタート')+'</b></div></div>';
-v.forEach(function(p,i){plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';plan+='<div class="route-stop"><div class="route-stop-dot via"></div><div class="route-stop-name">経由地点'+(v.length>1?' '+(i+1):'')+'</div></div>'});
-plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';
-plan+='<div class="route-stop"><div class="route-stop-dot end"></div><div class="route-stop-name"><b>'+(rc.endName||'ゴール')+'</b></div></div>';
+if(isCirc){
+  plan+='<div class="route-stop"><div class="route-stop-dot start"></div><div class="route-stop-name"><b>'+(rc.startName||'サーキット')+'</b></div></div>';
+}else{
+  plan+='<div class="route-stop"><div class="route-stop-dot start"></div><div class="route-stop-name"><b>'+(rc.startName||'スタート')+'</b></div></div>';
+  v.forEach(function(p,i){plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';plan+='<div class="route-stop"><div class="route-stop-dot via"></div><div class="route-stop-name">経由地点'+(v.length>1?' '+(i+1):'')+'</div></div>'});
+  plan+='<div class="route-stop"><div class="route-stop-line"></div></div>';
+  plan+='<div class="route-stop"><div class="route-stop-dot end"></div><div class="route-stop-name"><b>'+(rc.endName||'ゴール')+'</b></div></div>';
+}
 plan+='</div>';
 // ── タブ構造でモーダルを構築 ──
 const hasDetail = !!(r.parking || r.best || r.car || (r.spots && r.spots.length));
@@ -701,7 +709,9 @@ const fuelWarnHtml = r.fuel_warning
 // 基本情報パネル
 const panel0 =
   hazardsHtml
-  +'<div class="mo-svg-wrap" style="'+bg+'">'+wide+'<div class="mo-svg-labels"><span>'+(rc.startName||'START')+'</span><span>'+(rc.endName||'GOAL')+'</span></div></div>'
+  +(isCirc
+  ?'<div class="mo-svg-wrap" style="'+bg+'"><div class="mo-map-badge" style="color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.4)">サーキット</div>'+wide+'<div class="mo-svg-labels" style="background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.75)"><span>🏁 '+( rc.startName||'サーキット')+'</span><span>周回コース</span></div></div>'
+  :'<div class="mo-svg-wrap" style="'+bg+'"><div class="mo-map-badge">ルートイメージ</div>'+wide+'<div class="mo-svg-labels"><span>📍 '+(rc.startName||'スタート')+'</span><span>'+(rc.endName||'ゴール')+' 🏁</span></div></div>')
   +'<div class="mo-route-plan">'+plan+'</div>'
   +'<div class="mo-desc">'+r.desc+'</div>'
   +'<table class="info-tbl">'
@@ -732,11 +742,17 @@ const driverTbl = driverRows
   : '';
 const panel1 = driverTbl + buildSpotsHtml(r.spots);
 
-// 共通CTAフッター（C1: タブ外に1つだけ）
-const ctaHtml = '<div class="cta-group" style="margin-top:20px">'
-  +'<a href="'+fullUrl+'" class="cta cta-primary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>ルート全体をナビ</a>'
-  +'<a href="'+fromHereUrl+'" class="cta cta-secondary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>現在地からスタート地点へ</a>'
-  +'</div>';
+// 共通CTAフッター（サーキットはスポット表示、通常はナビ）
+const spotUrl='https://www.google.com/maps/search/?api=1&query='+s[0]+','+s[1];
+const ctaHtml = isCirc
+  ?'<div class="cta-group" style="margin-top:20px">'
+    +'<a href="'+spotUrl+'" class="cta cta-primary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>地図で場所を確認</a>'
+    +'<a href="'+fromHereUrl+'" class="cta cta-secondary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>現在地から向かう</a>'
+    +'</div>'
+  :'<div class="cta-group" style="margin-top:20px">'
+    +'<a href="'+fullUrl+'" class="cta cta-primary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>ルート全体をナビ</a>'
+    +'<a href="'+fromHereUrl+'" class="cta cta-secondary" onclick="if(navigator.vibrate)navigator.vibrate(50)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>現在地からスタート地点へ</a>'
+    +'</div>';
 
 document.getElementById('moBody').innerHTML =
   '<div class="mo-title">'+r.name+'</div>'
@@ -837,22 +853,36 @@ function makeFallbackSvg(cid, rid) {
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="bg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${cc[0]}"/><stop offset="100%" stop-color="${cc[1]}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#bg_${rid})"/><path d="${pd}" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="${pd}" fill="none" stroke="#3b78d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${sx}" cy="${sy}" r="5" fill="white" opacity="0.95"/><circle cx="${sx}" cy="${sy}" r="3" fill="#34A853"/>${endM}</svg>`;
 }
 
-// サーキット専用SVG（スタート=エンドのルート）
+// サーキット専用SVG（スタート=エンドのルート）— レーシングデザイン
 function makeCircuitSvg(cid, rid) {
   const W=320, H=136;
-  const cc={sea:['#cce0ef','#a8c8e0'],winding:['#cce0c0','#a8c8a0'],shutoko:['#d8d0e8','#b8b0d0'],circuit:['#e8ccc8','#d0b0a8'],night:['#bcc4d8','#9ca8c0'],mountain:['#c4d8c4','#a0c0a0'],michinoeki:['#ddd4b8','#c0b898'],onsen:['#fdd8d8','#f0b8b8'],flower:['#fdd0ea','#f0b0d8']}[cid]||['#d8d8d8','#c0c0c0'];
-  // オーバル型トラック
-  const cx=W/2, cy=H/2, rx=W*0.34, ry=H*0.32, sw=12;
+  // サーキットカテゴリは暗いアスファルト背景、他は濃いカテゴリカラー
+  const isCircCat = cid === 'circuit';
+  const bgA = isCircCat ? '#1c1c22' : {sea:'#1a3a4a',winding:'#1a2e1a',shutoko:'#22183a',night:'#10102a',mountain:'#1a2e1a',michinoeki:'#2e2618',onsen:'#2e1010',flower:'#2e1022'}[cid]||'#1e1e22';
+  const bgB = isCircCat ? '#2a2a35' : {sea:'#0e2030',winding:'#0e1e0e',shutoko:'#160c28',night:'#060618',mountain:'#0e1e0e',michinoeki:'#201a0a',onsen:'#200808',flower:'#200a18'}[cid]||'#18182a';
+  const trackCol = isCircCat ? '#d0d0d8' : 'rgba(255,255,255,0.75)';
+  const accentCol = isCircCat ? '#e53935' : 'rgba(255,255,255,0.9)';
+  const cx=W/2, cy=H/2, rx=W*0.36, ry=H*0.33, sw=11;
   const trackPath=`M ${cx-rx},${cy} a${rx},${ry} 0 1,1 ${rx*2},0 a${rx},${ry} 0 1,1 ${-rx*2},0`;
-  const innerRx=rx-sw, innerRy=ry-sw;
+  const flX=cx-rx, flY=cy-ry;
+  // チェッカーフラッグパターン（スタート/フィニッシュ）
+  const checker=`<rect x="${flX-4}" y="${flY}" width="3" height="${sw}" fill="${accentCol}" rx="1"/>
+    <rect x="${flX-4}" y="${flY}" width="3" height="${sw/2}" fill="rgba(0,0,0,0.4)"/>
+    <rect x="${flX+2}" y="${flY+sw/2}" width="3" height="${sw/2}" fill="rgba(0,0,0,0.4)"/>`;
+  // スピードライン
+  const lines=`<line x1="0" y1="25" x2="${W*0.28}" y2="25" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>
+    <line x1="0" y1="50" x2="${W*0.35}" y2="50" stroke="rgba(255,255,255,0.035)" stroke-width="1.5"/>
+    <line x1="0" y1="80" x2="${W*0.22}" y2="80" stroke="rgba(255,255,255,0.03)" stroke-width="1.5"/>
+    <line x1="0" y1="108" x2="${W*0.18}" y2="108" stroke="rgba(255,255,255,0.025)" stroke-width="1.5"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs><linearGradient id="cbg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${cc[0]}"/><stop offset="100%" stop-color="${cc[1]}"/></linearGradient></defs>
+    <defs><linearGradient id="cbg_${rid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${bgA}"/><stop offset="100%" stop-color="${bgB}"/></linearGradient></defs>
     <rect width="${W}" height="${H}" fill="url(#cbg_${rid})"/>
-    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="${sw+4}" stroke-linecap="round"/>
-    <path d="${trackPath}" fill="none" stroke="#555" stroke-width="${sw}" stroke-linecap="round"/>
-    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="${sw-3}" stroke-linecap="round" stroke-dasharray="8,6"/>
-    <rect x="${cx-3}" y="${cy-ry+2}" width="6" height="${sw-4}" fill="#f4a300" rx="1"/>
-    <text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="Outfit,sans-serif" font-size="13" font-weight="700" fill="rgba(0,0,0,0.45)">CIRCUIT</text>
+    ${lines}
+    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="${sw+8}" stroke-linecap="round"/>
+    <path d="${trackPath}" fill="none" stroke="${trackCol}" stroke-width="${sw}" stroke-linecap="round"/>
+    <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="${sw-5}" stroke-linecap="round" stroke-dasharray="7,5"/>
+    ${checker}
+    <text x="${cx+4}" y="${cy+6}" text-anchor="middle" font-family="Outfit,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="rgba(255,255,255,0.55)">CIRCUIT</text>
   </svg>`;
 }
 
@@ -1037,13 +1067,27 @@ async function drawTileCanvas(canvas, cid, rid, routeCoords) {
   }
 }
 
+// サーキット写真マップ（circuits/ フォルダに画像を入れると自動で使用）
+const CIRCUIT_IMGS = {
+  'circ_01': 'circuits/fuji.jpg',
+  'circ_02': 'circuits/tsukuba.jpg',
+  'circ_03': 'circuits/tsukuba.jpg',
+  'circ_04': 'circuits/sodegaura.jpg',
+  'circ_05': 'circuits/motegi.jpg',
+  'circ_06': 'circuits/honjo.jpg',
+};
+
 // カードマップ生成（Canvas版）
 const THUMB_VER = 'v1';
 function makeCardMap(cid, rid, startLbl, endLbl) {
   const labelsHtml = `<div class="rc-map-labels"><span>${startLbl}</span><span>${endLbl}</span></div>`;
 
-  // サーキット：専用オーバルSVGを即時表示
+  // サーキット：実写画像 or 専用SVGを即時表示
   if (isCircuitRoute(rid)) {
+    const circImg = CIRCUIT_IMGS[rid];
+    if (circImg) {
+      return `<div class="rc-map" id="map_${rid}"><img src="${circImg}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>`;
+    }
     return `<div class="rc-map" id="map_${rid}">${makeCircuitSvg(cid, rid)}</div>`;
   }
 
